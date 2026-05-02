@@ -62,8 +62,7 @@ th,td{border:1px solid #90a4ae;padding:4px 3px;text-align:center;vertical-align:
 .pd-inp{font-weight:bold;color:#e65100;font-size:12px;width:54px;border:1px solid #f9a825!important;border-radius:3px;padding:3px;text-align:center;background:#fffde7}
 td .txt-inp{width:100%;border:none;background:transparent;padding:3px;text-align:center;font-size:11px}
 td .txt-inp:focus{background:#e3f2fd;outline:1px solid #1565c0;border-radius:2px}
-/* Post group separator rows */
-tr.post-sep td{background:#283593;color:#fff;font-weight:bold;font-size:11px;padding:5px 8px;text-align:left;letter-spacing:.5px}
+
 tr[data-source="new"] .sno-col{background:#e8f5e9;color:#2e7d32}
 tr.hidden-row{display:none}
 tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;padding:6px 3px}
@@ -87,7 +86,7 @@ tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;
   table{font-size:7.5px}th{font-size:7.5px!important;padding:3px 2px!important}td{padding:3px 2px!important}
   h1{font-size:14px!important}h2,h3{font-size:10px!important}
   .school-header img{width:55px;height:62px}
-  .a-earn,.a-eper,.ag,.actc,.a-ded,.e-ded,.atd,.anet,.attend-col,.pd-cell,.sno-col,.post-col,.h1r th,.h2r th,.post-sep td
+  .a-earn,.a-eper,.ag,.actc,.a-ded,.e-ded,.atd,.anet,.attend-col,.pd-cell,.sno-col,.post-col,.h1r th,.h2r th
   {-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sig-section{margin-top:16px;padding-top:10px}
   .del-btn{display:none}tr.hidden-row{display:none!important}
@@ -416,7 +415,6 @@ function calcEPF_EE(b){return Math.min(Math.round(b*0.12),1800);}
 function calcESIC(g){return g<=21000?Math.round(g*0.0075):0;}
 
 function calcRow(row){
-  if(row.classList.contains("post-sep")) return;
   const md=parseFloat(row.querySelector(".md").value)||1;
   const pd=parseFloat(row.querySelector(".pd-inp").value)||0;
   const r=pd/md;
@@ -440,16 +438,6 @@ function calcRow(row){
 }
 
 function ni(cls,val,w){return `<input type="number" class="${cls}" value="${val}" min="0" style="min-width:${w}px" oninput="calcRow(this.closest('tr'));totals();">`;}
-
-function addSepRow(postLabel,colspan){
-  const tb=document.getElementById("tb");
-  const sep=document.createElement("tr");
-  sep.className="post-sep";
-  sep.dataset.sep=postLabel.toUpperCase();
-  sep.innerHTML=`<td colspan="${colspan}" style="text-align:left;padding:5px 10px">▶ ${postLabel.toUpperCase()}</td>`;
-  tb.appendChild(sep);
-  return sep;
-}
 
 function addRow(d={}){
   const tb=document.getElementById("tb");
@@ -497,17 +485,7 @@ function refreshFilter(){
     if(r.classList.contains("post-sep")) return;
     r.classList.toggle("hidden-row",!isVisible(r));
   });
-  // Hide separator rows if all data rows under them are hidden
-  const allRows=[...document.getElementById("tb").rows];
-  allRows.forEach((r,idx)=>{
-    if(!r.classList.contains("post-sep")) return;
-    let hasVisible=false;
-    for(let j=idx+1;j<allRows.length;j++){
-      if(allRows[j].classList.contains("post-sep")) break;
-      if(!allRows[j].classList.contains("hidden-row")){hasVisible=true;break;}
-    }
-    r.classList.toggle("hidden-row",!hasVisible);
-  });
+
   totals();
 }
 
@@ -544,7 +522,7 @@ function applySource(src,btn){
 }
 
 function totals(){
-  const rows=[...document.getElementById("tb").rows].filter(r=>!r.classList.contains("hidden-row")&&!r.classList.contains("post-sep"));
+  const rows=[...document.getElementById("tb").rows].filter(r=>!r.classList.contains("hidden-row"));
   const keys=["b","i","g","h","o","gross","eper","ctc","epee","esic","it","pt","fee","loan","oth","td","net"];
   const cls=[".c-basic",".c-incr",".c-gp",".c-hra",".c-oa",".gross",".c-eper",".ctc",
               ".c-epee",".c-esic",".c-it",".c-pt",".c-fee",".c-loan",".c-other",".tded",".net"];
@@ -561,10 +539,7 @@ function totals(){
 function removeRow(btn){btn.closest("tr").remove();renumber();totals();}
 function renumber(){
   let n=1;
-  [...document.getElementById("tb").rows].forEach(r=>{
-    if(!r.classList.contains("post-sep"))
-      r.cells[0].querySelector("input").value=n++;
-  });
+  [...document.getElementById("tb").rows].forEach(r=>{r.cells[0].querySelector("input").value=n++;});
 }
 function recalcAll(){[...document.getElementById("tb").rows].forEach(calcRow);totals();}
 function clearAll(){if(confirm("Clear all data?")){document.getElementById("tb").innerHTML="";totals();}}
@@ -572,7 +547,6 @@ function clearAll(){if(confirm("Clear all data?")){document.getElementById("tb")
 function applyDaysToAll(fromChange=false){
   const d=+document.getElementById("cDays").value||31;
   [...document.getElementById("tb").rows].forEach(r=>{
-    if(r.classList.contains("post-sep")) return;
     r.querySelector(".md").value=d;
     if(fromChange){const p=parseFloat(r.querySelector(".pd-inp").value)||0;if(p>d)r.querySelector(".pd-inp").value=d;}
     calcRow(r);
@@ -608,13 +582,7 @@ function updateMonthYear(){
 function loadData(){
   document.getElementById("tb").innerHTML="";
   const md=+document.getElementById("cDays").value||31;
-  const COLS=25; // total columns in table
-  let lastPost="";
   sourceData.forEach((item,idx)=>{
-    if(item.post!==lastPost){
-      addSepRow(item.post, COLS);
-      lastPost=item.post;
-    }
     addRow({sno:idx+1,name:item.name,post:item.post,days:md,present:md,
       basic:item.basic,incr:item.incr,gp:item.gp,hra:item.hra,oa:item.oa,
       it:item.it,pt:item.pt,fee:item.fee,loan:item.loan,other:0,
@@ -641,7 +609,6 @@ function exportExcel(){
   .actc{background:#5c6bc0;color:#fff;font-weight:bold}.a-eper{background:#e1bee7;font-weight:bold}
   .a-ded{background:#ffe082;font-weight:bold}.e-ded{background:#fff3e0;font-weight:bold}
   .atd{background:#ff7043;color:#fff;font-weight:bold}.anet{background:#1565c0;color:#fff;font-weight:bold}
-  .post-sep td{background:#283593;color:#fff;font-weight:bold;text-align:left;padding:4px 8px}
   tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold}
   .sig-row{display:flex;justify-content:space-between;margin-top:20px}
   .sig-box{text-align:center;width:18%}.sig-line{border-top:1px solid #000;margin-bottom:4px}
