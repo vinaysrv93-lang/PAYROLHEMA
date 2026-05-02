@@ -128,10 +128,16 @@ tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;
   <div class="filter-bar">
     <h4>🔍 Filter by Post / Group</h4>
     <div class="filter-group">
+      <span class="fg-label">📅 Month:</span>
+      <button id="btn-mar" class="filter-btn active" onclick="switchMonthData('mar')" style="background:#e8eaf6;color:#283593;border-color:#283593;font-weight:700">📋 March 2026</button>
+      <button id="btn-apr" class="filter-btn" onclick="switchMonthData('apr')" style="background:#fff3e0;color:#e65100;border-color:#e65100;font-weight:700">🗓️ April 2026</button>
+    </div>
+    <div class="filter-group">
       <span class="fg-label">Show:</span>
-      <button class="filter-btn active" onclick="applyFilter('ALL',this)">ALL (139)</button>
-      <button class="filter-btn" onclick="applySource('old',this)" style="background:#e3f2fd;color:#1565c0;border-color:#1565c0">📋 Old Staff (117)</button>
-      <button class="filter-btn" onclick="applySource('new',this)" style="background:#e8f5e9;color:#2e7d32;border-color:#2e7d32">🆕 New Staff (22)</button>
+      <button class="filter-btn active" onclick="applyFilter('ALL',this)">ALL</button>
+      <button class="filter-btn" onclick="applySource('old',this)" style="background:#e3f2fd;color:#1565c0;border-color:#1565c0">📋 Old Staff</button>
+      <button class="filter-btn" onclick="applySource('new',this)" style="background:#e8f5e9;color:#2e7d32;border-color:#2e7d32">🆕 New Staff</button>
+      <button class="filter-btn" onclick="applySource('apr',this)" style="background:#fff3e0;color:#e65100;border-color:#e65100">🗓️ April</button>
     </div>
     <div class="filter-group" style="margin-top:6px">
       <span class="fg-label">Teaching:</span>
@@ -196,6 +202,8 @@ tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;
     <button class="btn-teal"   onclick="applyDaysToAll()">📅 Apply Month Days</button>
     <button class="btn-blue"   onclick="recalcAll()">🔄 Recalculate All</button>
     <button class="btn-orange" onclick="exportExcel()">📊 Export to Excel</button>
+    <button style="background:#0d47a1;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px" onclick="saveEdits()">💾 Save Edits</button>
+    <button style="background:#4a148c;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px" onclick="restoreEdits()">🔄 Restore</button>
     <button class="btn-gray"   onclick="window.print()">🖨️ Print</button>
     <button class="btn-red"    onclick="clearAll()">🗑️ Clear All</button>
   </div>
@@ -263,7 +271,7 @@ tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;
 
 <script>
 const MN=["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
-const sourceData=[
+const marData=[
   {sno:1,name:'Poonam Sharma',post:'Principal',days:31,basic:44000,incr:3300,gp:30611,hra:21325,oa:4153,epee:3000,eper:1800,it:10000,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'old'},
   {sno:2,name:'Meenal Rathore',post:'Vice Principal',days:31,basic:28342,incr:0,gp:23658,hra:18000,oa:0,epee:1800,eper:1800,it:5000,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'old'},
   {sno:3,name:'Geetha Suresh',post:'PGT',days:31,basic:32974,incr:3297,gp:12578,hra:3330,oa:2233,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'old'},
@@ -402,6 +410,140 @@ const sourceData=[
   {sno:1,name:'SACHIN BAND',post:'DRIVER',days:30,basic:8250,incr:0,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'new'},
   {sno:2,name:'DEVI SINGH DHAKAD',post:'DRIVER',days:30,basic:8250,incr:0,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'new'}
 ];
+const aprData=[
+  {sno:1,name:'Poonam Sharma',post:'Principal',days:30,present:30,basic:44000,incr:3300,gp:30611,hra:21325,oa:4153,epee:3000,eper:1800,it:10000,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:2,name:'Meenal Rathore',post:'Vice Principal',days:30,present:30,basic:28342,incr:0,gp:23658,hra:18000,oa:0,epee:1800,eper:1800,it:5000,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:3,name:'Geetha Suresh',post:'PGT',days:30,present:30,basic:32974,incr:3297,gp:12578,hra:3330,oa:2233,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:4,name:'Anjali Sahadevan',post:'PGT',days:30,present:30,basic:17000,incr:1275,gp:7753,hra:2500,oa:1500,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:5,name:'Archana Gupta',post:'PGT',days:30,present:30,basic:21386,incr:1604,gp:11366,hra:1888,oa:1322,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:6,name:'Arpana Agarwal',post:'PGT Counsellor',days:30,present:30,basic:18874,incr:1416,gp:6330,hra:5000,oa:0,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:7,name:'Brijesh Soni',post:'PGT',days:30,present:30,basic:23564,incr:1767,gp:8610,hra:2370,oa:1596,epee:1800,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:8,name:'Muktesh S Pillai',post:'PGT',days:30,present:30,basic:22126,incr:2213,gp:8454,hra:3677,oa:2978,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:9,name:'Nitin Bhandari',post:'PGT',days:30,present:29,basic:24167,incr:0,gp:6090,hra:4833,oa:5510,epee:1740,eper:1740,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:10,name:'Preeti Sharma',post:'PGT',days:30,present:30,basic:17083,incr:1281,gp:7260,hra:1500,oa:1000,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:11,name:'Salman Aziz',post:'PGT (PHYSICS)',days:30,present:30,basic:25274,incr:1896,gp:9547,hra:2123,oa:1482,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:12,name:'Samrath Pratap Singh Bhadoria',post:'PGT ( PE)',days:30,present:30,basic:28449,incr:2134,gp:7459,hra:2047,oa:2047,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:13,name:'Sreelata Pillai',post:'PGT',days:30,present:30,basic:25000,incr:2500,gp:9928,hra:2249,oa:1445,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:14,name:'Snehal Mande',post:'PGT',days:30,present:30,basic:22500,incr:1688,gp:7865,hra:3500,oa:2546,epee:1800,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:15,name:'Sunit Vishudhyanand Singh',post:'PGT',days:30,present:30,basic:27512,incr:0,gp:10304,hra:3304,oa:5888,epee:1800,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:16,name:'Thirumagal B.',post:'PGT (CHEM.)',days:30,present:29,basic:26003,incr:0,gp:6119,hra:4834,oa:0,epee:1740,eper:1740,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:17,name:'Amit Rajoriya',post:'TGT',days:30,present:30,basic:18000,incr:1800,gp:6330,hra:1823,oa:1282,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:18,name:'Archana Purohit',post:'TGT',days:30,present:30,basic:19002,incr:1425,gp:7323,hra:1936,oa:1458,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:19,name:'Bindu Nair',post:'TGT',days:30,present:30,basic:22398,incr:1680,gp:9393,hra:1904,oa:1338,epee:1800,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:20,name:'Humera Khatoon',post:'TGT',days:30,present:30,basic:27695,incr:1385,gp:10304,hra:3487,oa:2390,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:21,name:'Harmeet Kaur Patheja',post:'TGT',days:30,present:30,basic:16000,incr:1200,gp:4330,hra:6000,oa:4167,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:22,name:'Lina Nagle',post:'TGT',days:30,present:30,basic:16851,incr:1264,gp:6330,hra:2392,oa:2392,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:23,name:'Muskan Jatav',post:'TGT',days:30,present:30,basic:16668,incr:1250,gp:4300,hra:7000,oa:2000,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:24,name:'Namita Biswas',post:'TGT',days:30,present:30,basic:21039,incr:2104,gp:7609,hra:2500,oa:2000,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:25,name:'Neha Parita',post:'TGT',days:30,present:30,basic:19398,incr:1455,gp:9190,hra:2472,oa:1838,epee:3000,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:26,name:'Nirmala Parashar',post:'TGT',days:30,present:30,basic:20103,incr:1005,gp:6863,hra:1321,oa:1200,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:27,name:'Ranveer Singh Meena',post:'TGT',days:30,present:30,basic:19878,incr:1491,gp:8015,hra:1956,oa:1481,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:28,name:'Reena Sharma',post:'TGT',days:30,present:30,basic:18269,incr:1370,gp:7129,hra:1546,oa:1078,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:29,name:'Sadhana Jha',post:'TGT',days:30,present:30,basic:18950,incr:1895,gp:6844,hra:2700,oa:950,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:30,name:'Shahana Chakraborty',post:'TGT',days:30,present:30,basic:19448,incr:1945,gp:4913,hra:1500,oa:1500,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:31,name:'Ritu Pandey',post:'Librarian',days:30,present:30,basic:15500,incr:1163,gp:6330,hra:5500,oa:500,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:32,name:'Shariq Khan',post:'TGT',days:30,present:30,basic:19192,incr:1439,gp:5343,hra:1662,oa:1500,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:3500,account:'',ifsc:'',source:'apr'},
+  {sno:33,name:'Jalaja Jayachandran',post:'TGT',days:30,present:30,basic:17313,incr:1299,gp:4300,hra:2100,oa:1700,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:34,name:'Shweta Malviya',post:'TGT',days:30,present:30,basic:17652,incr:1324,gp:6030,hra:2000,oa:1500,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:35,name:'Aarti Sharma',post:'PRT',days:30,present:30,basic:17479,incr:1311,gp:2887,hra:1500,oa:1500,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:36,name:'Aditi Tiwari',post:'PRT',days:30,present:30,basic:17500,incr:1750,gp:2873,hra:1950,oa:2130,epee:3000,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:37,name:'Amit Chakraborty',post:'PRT',days:30,present:30,basic:19070,incr:1430,gp:5513,hra:2121,oa:1686,epee:3000,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:38,name:'Ankita Banerjee',post:'PRT',days:30,present:30,basic:13500,incr:1350,gp:2380,hra:5000,oa:1500,epee:1620,eper:1620,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:39,name:'Annapurna',post:'PRT',days:30,present:30,basic:15555,incr:778,gp:2380,hra:0,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:40,name:'Archana Tiwari',post:'PRT',days:30,present:30,basic:17545,incr:877,gp:2380,hra:2000,oa:0,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:41,name:'Bani Prasad Jain',post:'LAB ASST.',days:30,present:30,basic:20563,incr:1028,gp:5099,hra:1192,oa:1192,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:42,name:'Dakshita Goyal',post:'PRT',days:30,present:27,basic:15750,incr:0,gp:2142,hra:2250,oa:3978,epee:1620,eper:1620,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:43,name:'Geeta Choudhary',post:'PRT',days:30,present:30,basic:15555,incr:778,gp:2380,hra:0,oa:727,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:44,name:'K.Uma',post:'PRT',days:30,present:30,basic:17102,incr:1283,gp:3011,hra:1183,oa:1183,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:45,name:'Karamjeet Kaur',post:'PRT',days:30,present:30,basic:20066,incr:2007,gp:2940,hra:2006,oa:2006,epee:1800,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:46,name:'Kesar Advani',post:'PRT',days:30,present:30,basic:16667,incr:833,gp:3908,hra:1393,oa:1017,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:47,name:'Maya Nair',post:'PRT',days:30,present:30,basic:20500,incr:2050,gp:3833,hra:5000,oa:4000,epee:3000,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:48,name:'Manjusha Bonde',post:'PRT',days:30,present:30,basic:17012,incr:1276,gp:3996,hra:1726,oa:1395,epee:3000,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:49,name:'Navneet Chetwani',post:'PRT',days:30,present:30,basic:18266,incr:1370,gp:2380,hra:1000,oa:1000,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:50,name:'Naila Siddiqui',post:'PRT',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:51,name:'Pooja Sharma',post:'PRT',days:30,present:29,basic:15451,incr:772,gp:2301,hra:352,oa:352,epee:1740,eper:1740,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:52,name:'Pooja Tiwari',post:'PRT',days:30,present:30,basic:17545,incr:1316,gp:2380,hra:2000,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:53,name:'Reena Mathur',post:'PRT',days:30,present:30,basic:15932,incr:1195,gp:2380,hra:312,oa:312,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:54,name:'Rema Sunil Nair',post:'PRT',days:30,present:30,basic:17027,incr:1703,gp:4789,hra:1338,oa:1082,epee:3000,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:55,name:'Rita Gupta',post:'PRT',days:30,present:30,basic:16229,incr:1623,gp:2380,hra:1000,oa:1000,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:56,name:'Sheshadri Gawhade',post:'PRT',days:30,present:27,basic:15583,incr:1558,gp:2182,hra:1375,oa:1375,epee:1650,eper:1650,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:57,name:'Shivani Dunge',post:'PRT',days:30,present:29,basic:16960,incr:848,gp:2301,hra:3867,oa:0,epee:1740,eper:1740,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:58,name:'Sneha Nair',post:'PRT',days:30,present:30,basic:15545,incr:1555,gp:2380,hra:4000,oa:0,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:59,name:'Srashti Rathore',post:'PRT',days:30,present:29,basic:15438,incr:1544,gp:2301,hra:401,oa:401,epee:1740,eper:1740,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:60,name:'Trupti Sanjiv Chimote',post:'PRT',days:30,present:30,basic:16000,incr:1200,gp:2380,hra:4400,oa:0,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:61,name:'Vinita Sharma',post:'PRT',days:30,present:30,basic:14430,incr:1443,gp:2380,hra:4430,oa:1430,epee:1732,eper:1732,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:62,name:'Kamaljeet kaur',post:'PPRT',days:30,present:28,basic:9800,incr:0,gp:2221,hra:1979,oa:0,epee:1176,eper:1176,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:63,name:'Sadhana Singh',post:'PPRT',days:30,present:30,basic:16000,incr:0,gp:2380,hra:3620,oa:0,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:64,name:'Akansha Yadav',post:'PPRT',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:65,name:'Saumya Singh',post:'Administrative Officer',days:30,present:30,basic:15000,incr:0,gp:2380,hra:5000,oa:2620,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:66,name:'P K Ajit',post:'School Coordinator',days:30,present:30,basic:19020,incr:1902,gp:5564,hra:2500,oa:2000,epee:3000,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:67,name:'Babita Sahu',post:'Office Coordinator',days:30,present:30,basic:18666,incr:1400,gp:7118,hra:2000,oa:1500,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:68,name:'Hitendra Sharma',post:'Senior Accountant',days:30,present:30,basic:22871,incr:2287,gp:9588,hra:3000,oa:2300,epee:3000,eper:1800,it:0,pt:167,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:69,name:'Shivendra Kumar Mathur',post:'Office Coordinator',days:30,present:30,basic:18010,incr:1351,gp:5967,hra:2500,oa:1000,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:70,name:'Nikita Pandey',post:'Receptionist',days:30,present:30,basic:15226,incr:1523,gp:3500,hra:2500,oa:2023,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:71,name:'Lakhan Kumar Baghel',post:'Maint.Supervisor',days:30,present:30,basic:15000,incr:1125,gp:1850,hra:2924,oa:2927,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:6300,account:'',ifsc:'',source:'apr'},
+  {sno:72,name:'C Kumar',post:'Office Assistant',days:30,present:30,basic:11500,incr:863,gp:2895,hra:1269,oa:843,epee:1380,eper:1380,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:73,name:'Anil Dandge',post:'Driver',days:30,present:25,basic:6875,incr:0,gp:1542,hra:1250,oa:1259,epee:825,eper:825,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:74,name:'Berjesh Kumar',post:'Driver',days:30,present:30,basic:8250,incr:0,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:1500,account:'',ifsc:'',source:'apr'},
+  {sno:75,name:'Manjoor Khan',post:'Driver',days:30,present:30,basic:15603,incr:1560,gp:3636,hra:4000,oa:2000,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:3000,account:'',ifsc:'',source:'apr'},
+  {sno:76,name:'Manoj Mahajan',post:'Driver',days:30,present:30,basic:8250,incr:694,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:1500,account:'',ifsc:'',source:'apr'},
+  {sno:77,name:'Radha Krishnan',post:'Driver',days:30,present:30,basic:8910,incr:668,gp:2187,hra:997,oa:997,epee:1069,eper:1069,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:78,name:'Sanjay Kundelkar',post:'Driver',days:30,present:30,basic:12412,incr:931,gp:3080,hra:1200,oa:1019,epee:1489,eper:1489,it:0,pt:0,fee:0,loan:3000,account:'',ifsc:'',source:'apr'},
+  {sno:79,name:'Lokesh Mina',post:'Driver',days:30,present:30,basic:8250,incr:694,gp:1850,hra:1500,oa:1495,epee:990,eper:990,it:0,pt:0,fee:0,loan:2000,account:'',ifsc:'',source:'apr'},
+  {sno:80,name:'Sunil Yadav',post:'Driver',days:30,present:30,basic:8250,incr:0,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:81,name:'Ishaq Khan',post:'Driver',days:30,present:17,basic:4675,incr:0,gp:1048,hra:850,oa:856,epee:561,eper:561,it:0,pt:0,fee:0,loan:2000,account:'',ifsc:'',source:'apr'},
+  {sno:82,name:'C. Balamurugan',post:'Conductor',days:30,present:30,basic:8125,incr:609,gp:2162,hra:937,oa:937,epee:975,eper:975,it:0,pt:0,fee:0,loan:1500,account:'',ifsc:'',source:'apr'},
+  {sno:83,name:'Pramod Patil',post:'Conductor',days:30,present:30,basic:8125,incr:609,gp:2162,hra:937,oa:937,epee:975,eper:975,it:0,pt:0,fee:0,loan:3000,account:'',ifsc:'',source:'apr'},
+  {sno:84,name:'Ravi Chaudhary',post:'Conductor',days:30,present:30,basic:8803,incr:440,gp:2483,hra:917,oa:647,epee:1056,eper:1056,it:0,pt:0,fee:0,loan:2000,account:'',ifsc:'',source:'apr'},
+  {sno:85,name:'Silvone',post:'Conductor',days:30,present:30,basic:8413,incr:841,gp:2178,hra:741,oa:741,epee:1010,eper:1010,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:86,name:'Velangani',post:'Conductor',days:30,present:30,basic:7500,incr:0,gp:1850,hra:0,oa:0,epee:900,eper:900,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:87,name:'Govind',post:'Gardener',days:30,present:30,basic:8250,incr:925,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:88,name:'Mohan Lal Maali',post:'Gardener',days:30,present:30,basic:10174,incr:763,gp:2548,hra:962,oa:675,epee:1221,eper:1221,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:89,name:'Asha Thakre',post:'House Keeping',days:30,present:30,basic:11050,incr:829,gp:2604,hra:891,oa:641,epee:1326,eper:1326,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:90,name:'Baby Bai',post:'House Keeping',days:30,present:30,basic:11050,incr:829,gp:2604,hra:891,oa:641,epee:1326,eper:1326,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:91,name:'Babli Dhameriya',post:'House Keeping',days:30,present:29,basic:7250,incr:0,gp:1788,hra:0,oa:0,epee:870,eper:870,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:92,name:'Devmani',post:'House Keeping',days:30,present:30,basic:7700,incr:578,gp:2099,hra:449,oa:449,epee:924,eper:924,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:93,name:'Kamlesh Kumar Makoriya',post:'House Keeping',days:30,present:30,basic:9497,incr:712,gp:2220,hra:617,oa:617,epee:1140,eper:1140,it:0,pt:0,fee:0,loan:6000,account:'',ifsc:'',source:'apr'},
+  {sno:94,name:'Kavita Choudhary',post:'House Keeping',days:30,present:30,basic:9308,incr:698,gp:2369,hra:702,oa:487,epee:1117,eper:1117,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:95,name:'Kusum Makodia',post:'House Keeping',days:30,present:30,basic:12156,incr:912,gp:3274,hra:1090,oa:718,epee:1459,eper:1459,it:0,pt:0,fee:0,loan:3000,account:'',ifsc:'',source:'apr'},
+  {sno:96,name:'Manju',post:'House Keeping',days:30,present:30,basic:7625,incr:572,gp:1850,hra:125,oa:125,epee:915,eper:915,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:97,name:'Nadiya',post:'House Keeping',days:30,present:30,basic:7625,incr:572,gp:1850,hra:125,oa:125,epee:915,eper:915,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:98,name:'Parvati',post:'House Keeping',days:30,present:30,basic:11799,incr:885,gp:2642,hra:873,oa:607,epee:1416,eper:1416,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:99,name:'Rekha Bhagwan Khairnar',post:'House Keeping',days:30,present:30,basic:11474,incr:861,gp:2623,hra:921,oa:663,epee:1377,eper:1377,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:100,name:'Rekha Lalwani',post:'House Keeping',days:30,present:30,basic:8677,incr:651,gp:2337,hra:712,oa:510,epee:1041,eper:1041,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:101,name:'Renuka',post:'House Keeping',days:30,present:30,basic:7750,incr:775,gp:2099,hra:499,oa:499,epee:930,eper:930,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:102,name:'Sima Gosar',post:'House Keeping',days:30,present:30,basic:7700,incr:578,gp:2324,hra:449,oa:449,epee:924,eper:924,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:103,name:'Uma',post:'House Keeping',days:30,present:30,basic:7750,incr:775,gp:2099,hra:499,oa:499,epee:930,eper:930,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:104,name:'V. Sushila',post:'House Keeping',days:30,present:30,basic:7700,incr:578,gp:1850,hra:200,oa:200,epee:924,eper:924,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:105,name:'Vyula Joseph',post:'House Keeping',days:30,present:30,basic:7700,incr:770,gp:2099,hra:449,oa:449,epee:924,eper:924,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:106,name:'Lakshmi',post:'House Keeping',days:30,present:30,basic:7500,incr:0,gp:1850,hra:0,oa:0,epee:900,eper:900,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:107,name:'K. Rajni',post:'House Keeping',days:30,present:30,basic:7500,incr:0,gp:1850,hra:0,oa:0,epee:900,eper:900,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:108,name:'Deepak Chobey',post:'Security Guard',days:30,present:30,basic:10743,incr:806,gp:2672,hra:1019,oa:776,epee:1289,eper:1289,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:109,name:'M.Raja',post:'Utility Incharge',days:30,present:30,basic:11500,incr:863,gp:2529,hra:1808,oa:1519,epee:1380,eper:1380,it:0,pt:0,fee:0,loan:2000,account:'',ifsc:'',source:'apr'},
+  {sno:110,name:'R. Karthik',post:'Security Guard',days:30,present:30,basic:9300,incr:892,gp:2118,hra:980,oa:1940,epee:1116,eper:1116,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:111,name:'Vinod Namdev',post:'Security Guard',days:30,present:30,basic:9300,incr:698,gp:2427,hra:877,oa:675,epee:1116,eper:1116,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:112,name:'BUSHRA SIDDIQUI',post:'Mother Teacher',days:30,present:28,basic:14839,incr:0,gp:2261,hra:1853,oa:1758,epee:1710,eper:1710,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:113,name:'IQRA ALI',post:'PRT',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:114,name:'JYOTI SINGH',post:'PRT',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:115,name:'SWATI RAI',post:'PRT',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:116,name:'VANDANA KAURAVA',post:'Mother Teacher',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:117,name:'HEMLATA SINGH',post:'PRT',days:30,present:29,basic:15099,incr:0,gp:2301,hra:1885,oa:0,epee:1740,eper:1740,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:118,name:'AYESHA JAMSHED',post:'PRT',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:119,name:'YOJNA YADAV',post:'Mother Teacher',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:0,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:120,name:'TIMSI JOSHI',post:'Mother Teacher',days:30,present:30,basic:15620,incr:0,gp:2380,hra:1950,oa:1800,epee:1800,eper:1800,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:121,name:'ANGHITA PRASAD',post:'Mother Teacher',days:30,present:27,basic:14058,incr:0,gp:2142,hra:315,oa:0,epee:1620,eper:1620,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:122,name:'VAISHALI SHARMA',post:'Mother Teacher',days:30,present:23,basic:11975,incr:0,gp:1825,hra:1917,oa:1917,epee:1380,eper:1380,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:123,name:'TARUN PAGARE',post:'TGT',days:30,present:29,basic:17700,incr:0,gp:4228,hra:0,oa:2581,epee:1770,eper:1770,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:124,name:'MAYANK LODHI',post:'TGT',days:30,present:30,basic:18000,incr:0,gp:4300,hra:6500,oa:7250,epee:1800,eper:1800,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:125,name:'SHWETA TIWARI',post:'TGT',days:30,present:30,basic:18000,incr:0,gp:4300,hra:1650,oa:0,epee:1800,eper:1800,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:126,name:'SALMA KHAN HASHMI',post:'TGT',days:30,present:29,basic:17400,incr:0,gp:4157,hra:5317,oa:6114,epee:1740,eper:1740,it:0,pt:125,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:127,name:'SHUBHAM SAXENA',post:'PGT',days:30,present:29,basic:22233,incr:0,gp:6090,hra:7733,oa:7443,epee:1740,eper:1740,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:128,name:'ARCHANA PRASAD',post:'PGT',days:30,present:29,basic:22233,incr:0,gp:6090,hra:6767,oa:7443,epee:1740,eper:1740,it:0,pt:208,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:129,name:'S. Lavanya',post:'Dance',days:30,present:24,basic:6000,incr:0,gp:1480,hra:0,oa:520,epee:720,eper:720,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:130,name:'SACHIN BAND',post:'DRIVER',days:30,present:30,basic:8250,incr:0,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'},
+  {sno:131,name:'DEVI SINGH DHAKAD',post:'DRIVER',days:30,present:30,basic:8250,incr:0,gp:1850,hra:1500,oa:1511,epee:990,eper:990,it:0,pt:0,fee:0,loan:0,account:'',ifsc:'',source:'apr'}
+];
+let sourceData=marData.slice();
 
 let currentFilter="ALL",currentFilterList=null,currentSource=null;
 
@@ -597,6 +739,16 @@ function updateSig(){
   document.getElementById("sSecretary").textContent=document.getElementById("cSecretary").value||" ";
   document.getElementById("sPresident").textContent=document.getElementById("cPresident").value||" ";
 }
+function switchMonthData(src){
+  sourceData = src==="apr" ? aprData.slice() : marData.slice();
+  const md = src==="apr" ? 30 : 31;
+  const mo = src==="apr" ? 3 : 2;
+  document.getElementById("cDays").value = md;
+  document.getElementById("cMonth").value = mo;
+  document.getElementById("btn-mar").classList.toggle("active", src!=="apr");
+  document.getElementById("btn-apr").classList.toggle("active", src==="apr");
+  loadData(); updateMonthYear();
+}
 function updateMonthYear(){
   const m=+document.getElementById("cMonth").value;
   const y=+document.getElementById("cYear").value||2026;
@@ -611,7 +763,7 @@ function loadData(){
   document.getElementById("tb").innerHTML="";
   const md=+document.getElementById("cDays").value||31;
   sourceData.forEach((item,idx)=>{
-    addRow({sno:idx+1,name:item.name,post:item.post,days:md,present:md,
+    addRow({sno:idx+1,name:item.name,post:item.post,days:item.days||md,present:item.present||item.days||md,
       basic:item.basic,incr:item.incr,gp:item.gp,hra:item.hra,oa:item.oa,
       epee:item.epee,eper:item.eper,
       it:item.it,pt:item.pt,fee:item.fee,loan:item.loan,other:0,
@@ -653,6 +805,52 @@ function exportExcel(){
 }
 
 updateMonthYear();updateSig();loadData();
+
+// ── SAVE / RESTORE EDITS (in-memory, no localStorage)
+let savedEdits = {};
+function saveEdits(){
+  savedEdits = {};
+  const key = document.getElementById("btn-apr").classList.contains("active") ? "apr" : "mar";
+  document.querySelectorAll("#tb tr").forEach(row=>{
+    const nm = row.querySelector(".c-name")?.textContent?.trim();
+    if(!nm) return;
+    const pd = row.querySelector(".pd-inp")?.value || "";
+    const it = row.querySelector(".inp-it")?.dataset?.val || "";
+    const pt = row.querySelector(".inp-pt")?.dataset?.val || "";
+    const fee= row.querySelector(".inp-fee")?.dataset?.val || "";
+    const loan=row.querySelector(".inp-loan")?.dataset?.val|| "";
+    const acc= row.querySelector(".inp-acc")?.value || "";
+    const ifsc=row.querySelector(".inp-ifsc")?.value || "";
+    savedEdits[key+"__"+nm] = {pd,it,pt,fee,loan,acc,ifsc};
+  });
+  const cnt = Object.keys(savedEdits).length;
+  alert("✅ Saved edits for "+cnt+" employees!");
+}
+function restoreEdits(){
+  if(!Object.keys(savedEdits).length){ alert("No saved data found. Please click 💾 Save first."); return; }
+  const key = document.getElementById("btn-apr").classList.contains("active") ? "apr" : "mar";
+  let restored = 0;
+  document.querySelectorAll("#tb tr").forEach(row=>{
+    const nm = row.querySelector(".c-name")?.textContent?.trim();
+    if(!nm) return;
+    const e = savedEdits[key+"__"+nm];
+    if(!e) return;
+    const pdInp = row.querySelector(".pd-inp");
+    if(pdInp && e.pd){ pdInp.value = e.pd; }
+    ["it","pt","fee","loan"].forEach(f=>{
+      const inp = row.querySelector(".inp-"+f);
+      if(inp && e[f]!==undefined){ inp.dataset.val = e[f]; inp.textContent = e[f]>0?fmt(+e[f]):"–"; }
+    });
+    const acc = row.querySelector(".inp-acc");
+    const ifsc= row.querySelector(".inp-ifsc");
+    if(acc && e.acc) acc.value = e.acc;
+    if(ifsc && e.ifsc) ifsc.value = e.ifsc;
+    restored++;
+  });
+  recalcAll();
+  alert("✅ Restored edits for "+restored+" employees!");
+}
+
 </script>
 </body>
 </html>
