@@ -916,6 +916,25 @@ function restoreEdits(){
         style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
     </div>
     <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Payment Mode <span style="color:#b71c1c;">*</span></label>
+      <select id="adv-mode" onchange="advTogglePayMode()"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;background:#fafafa;">
+        <option value="">-- Select Mode --</option>
+        <option value="Bank Transfer">&#x1F3E6; Bank Transfer</option>
+        <option value="Cash">&#x1F4B5; Cash</option>
+      </select>
+    </div>
+    <div id="adv-txn-wrap">
+      <label style="display:block;font-size:11px;color:#1565c0;font-weight:bold;margin-bottom:3px;">&#x1F4CB; Transaction ID</label>
+      <input type="text" id="adv-txnid" placeholder="e.g. TXN123456789"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Date of Payment</label>
+      <input type="date" id="adv-paydate"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
       <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Total Advance Amount (&#8377;) <span style="color:#b71c1c;">*</span></label>
       <input type="number" id="adv-total" min="0" placeholder="e.g. 30000" oninput="advAutoCalc()"
         style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
@@ -978,6 +997,9 @@ function restoreEdits(){
           <th rowspan="2" style="min-width:68px;">End</th>
           <th colspan="2" style="background:#1565c0;color:#fff;">Repayment</th>
           <th rowspan="2" style="background:#b71c1c;color:#fff;min-width:75px;">Outstanding (&#8377;)</th>
+          <th rowspan="2" style="min-width:90px;background:#4a148c;color:#fff;">Payment Mode</th>
+          <th rowspan="2" style="min-width:100px;background:#1565c0;color:#fff;">Transaction ID</th>
+          <th rowspan="2" style="min-width:88px;">Date of Payment</th>
           <th rowspan="2" style="min-width:32px;">Del</th>
         </tr>
         <tr class="h2r">
@@ -1069,6 +1091,17 @@ function restoreEdits(){
     document.getElementById('adv-post').value = parts[1] || '';
   };
 
+
+  /* ---------- Toggle Transaction ID visibility ---------- */
+  window.advTogglePayMode = function(){
+    var mode = document.getElementById('adv-mode').value;
+    var txnWrap = document.getElementById('adv-txn-wrap');
+    if(txnWrap){
+      txnWrap.style.display = (mode === 'Bank Transfer') ? '' : 'none';
+      if(mode !== 'Bank Transfer') document.getElementById('adv-txnid').value = '';
+    }
+  };
+
   /* ---------- Auto-calculate EMI + End Month ---------- */
   window.advAutoCalc = function(){
     var tot = parseFloat(document.getElementById('adv-total').value) || 0;
@@ -1107,18 +1140,23 @@ function restoreEdits(){
     if(!sv)      { alert('\u26A0\uFE0F Select a starting month!'); return; }
 
     var parts = empVal.split('||');
+    var mode = document.getElementById('adv-mode').value;
+    if(!mode){ alert('\u26A0\uFE0F Please select a Payment Mode!'); return; }
     var rec = {
-      id   : Date.now(),
-      name : parts[0],
-      post : parts[1] || document.getElementById('adv-post').value || '',
-      dg   : document.getElementById('adv-date').value,
-      rs   : document.getElementById('adv-reason').value.trim() || '-',
-      tot  : tot,
-      cnt  : cnt,
-      emi  : Math.ceil(tot / cnt),
-      st   : sv,
-      en   : document.getElementById('adv-end').value,
-      pd   : 0
+      id      : Date.now(),
+      name    : parts[0],
+      post    : parts[1] || document.getElementById('adv-post').value || '',
+      dg      : document.getElementById('adv-date').value,
+      rs      : document.getElementById('adv-reason').value.trim() || '-',
+      mode    : mode,
+      txnid   : (mode === 'Bank Transfer') ? (document.getElementById('adv-txnid').value.trim() || '-') : '-',
+      paydate : document.getElementById('adv-paydate').value || '',
+      tot     : tot,
+      cnt     : cnt,
+      emi     : Math.ceil(tot / cnt),
+      st      : sv,
+      en      : document.getElementById('adv-end').value,
+      pd      : 0
     };
 
     AR.push(rec);
@@ -1130,10 +1168,12 @@ function restoreEdits(){
 
   /* ---------- Clear form ---------- */
   function advClearForm(){
-    ['adv-total','adv-count','adv-emi','adv-start','adv-end','adv-date','adv-reason','adv-post'].forEach(function(id){
+    ['adv-total','adv-count','adv-emi','adv-start','adv-end','adv-date','adv-reason','adv-post','adv-txnid','adv-paydate'].forEach(function(id){
       var el = document.getElementById(id); if(el) el.value = '';
     });
     document.getElementById('adv-emp').value = '';
+    document.getElementById('adv-mode').value = '';
+    var tw = document.getElementById('adv-txn-wrap'); if(tw) tw.style.display='none';
   }
 
   /* ---------- Update paid EMIs ---------- */
@@ -1162,11 +1202,11 @@ function restoreEdits(){
   /* ---------- Export CSV ---------- */
   window.advExportCSV = function(){
     if(!AR.length){ alert('No records to export.'); return; }
-    var c = '\uFEFFS.No.,Name,Post,Date Given,Reason,Total Advance,No. of EMIs,Monthly EMI (Rs),Start Month,End Month,EMIs Paid,Recovered (Rs),Outstanding (Rs)\n';
+    var c = '\uFEFFS.No.,Name,Post,Date Given,Reason,Payment Mode,Transaction ID,Date of Payment,Total Advance,No. of EMIs,Monthly EMI (Rs),Start Month,End Month,EMIs Paid,Recovered (Rs),Outstanding (Rs)\n';
     AR.forEach(function(r, i){
       var rec = Math.min(r.pd * r.emi, r.tot);
       var out = Math.max(r.tot - rec, 0);
-      c += (i+1)+',"'+r.name+'","'+r.post+'","'+(r.dg||'')+'","'+r.rs+'",'+r.tot+','+r.cnt+','+r.emi+','+r.st+','+r.en+','+r.pd+','+rec+','+out+'\n';
+      c += (i+1)+',"'+r.name+'","'+r.post+'","'+(r.dg||'')+'","'+r.rs+'","'+(r.mode||'')+'","'+(r.txnid||'')+'","'+(r.paydate||'')+'",'+r.tot+','+r.cnt+','+r.emi+','+r.st+','+r.en+','+r.pd+','+rec+','+out+'\n';
     });
     var blob = new Blob([c], {type:'text/csv;charset=utf-8;'});
     var a = document.createElement('a');
@@ -1209,6 +1249,9 @@ function restoreEdits(){
         '</td>' +
         '<td style="background:#e3f2fd;font-weight:bold;color:#1565c0;text-align:center;">' + fmt(rec) + '</td>' +
         '<td style="background:' + (out > 0 ? '#ffebee' : '#e8f5e9') + ';font-weight:bold;color:' + (out > 0 ? '#b71c1c' : '#2e7d32') + ';text-align:center;">' + fmt(out) + '</td>' +
+        '<td style="text-align:center;font-weight:bold;color:#4a148c;background:#f3e5f5;">' + (r.mode||'-') + '</td>' +
+        '<td style="text-align:center;font-size:10px;color:#1565c0;">' + (r.txnid||'-') + '</td>' +
+        '<td style="text-align:center;">' + (r.paydate||'-') + '</td>' +
         '<td><button class="del-btn" onclick="advDelete(' + i + ')">&#x2715;</button></td>';
       tbody.appendChild(tr);
     });
@@ -1238,7 +1281,7 @@ function restoreEdits(){
         ' &nbsp;&bull;&nbsp; Total: &#8377;' + fmt(r.tot) +
         ' &nbsp;&bull;&nbsp; EMI: &#8377;' + fmt(r.emi) + ' &times; ' + r.cnt + ' months' +
         ' &nbsp;&bull;&nbsp; Recovered: &#8377;' + fmt(rec) +
-        ' &nbsp;&bull;&nbsp; <span style="color:' + (out > 0 ? '#b71c1c' : '#2e7d32') + '">Outstanding: &#8377;' + fmt(out) + '</span></div>' +
+        ' &nbsp;&bull;&nbsp; <span style="color:' + (out > 0 ? '#b71c1c' : '#2e7d32') + '">Outstanding: &#8377;' + fmt(out) + '</span>' + (r.mode ? ' &nbsp;&bull;&nbsp; <span style="color:#4a148c">Mode: ' + r.mode + (r.txnid && r.txnid!=='-' ? ' | TXN: ' + r.txnid : '') + (r.paydate ? ' | Paid on: ' + r.paydate : '') + '</span>' : '') + '</div>' +
         '<div class="table-wrap"><table style="font-size:11px;width:auto;">' +
         '<thead><tr class="h2r">' +
         '<th style="min-width:32px;">#</th>' +
