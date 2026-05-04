@@ -113,23 +113,35 @@ tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;
       style="background:#fff;color:#e65100;border:2px solid #e65100;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;">
       &#x1F4B8; Advance Payment
     </button>
+    <button id="nav-fees" onclick="showPage('fees')"
+      style="background:#fff;color:#6a1b9a;border:2px solid #6a1b9a;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;">
+      &#x1F4DA; Child Fees Deduction
+    </button>
   </div>
 
   <script>
   /* ===== PAGE SWITCHER ===== */
   function showPage(p){
-    document.getElementById('page-main').style.display    = (p==='main')    ? '' : 'none';
-    document.getElementById('page-advance').style.display = (p==='advance') ? '' : 'none';
-    var nb = document.getElementById('nav-main');
-    var ab = document.getElementById('nav-advance');
-    if(p==='main'){
-      nb.style.cssText = 'background:#1a237e;color:#fff;border:2px solid #1a237e;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);';
-      ab.style.cssText = 'background:#fff;color:#e65100;border:2px solid #e65100;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;';
-    } else {
-      ab.style.cssText = 'background:#e65100;color:#fff;border:2px solid #e65100;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);';
-      nb.style.cssText = 'background:#fff;color:#1a237e;border:2px solid #1a237e;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;';
-      advInit();
-    }
+    ['main','advance','fees'].forEach(function(x){
+      var d = document.getElementById('page-'+x); if(d) d.style.display = (x===p)?'':'none';
+    });
+    var styles = {
+      main:    ['#1a237e','#fff','#1a237e'],
+      advance: ['#e65100','#fff','#e65100'],
+      fees:    ['#6a1b9a','#fff','#6a1b9a']
+    };
+    ['main','advance','fees'].forEach(function(x){
+      var btn = document.getElementById('nav-'+x); if(!btn) return;
+      if(x===p){
+        btn.style.background = styles[x][0]; btn.style.color = styles[x][1];
+        btn.style.borderColor = styles[x][2]; btn.style.boxShadow = '0 2px 6px rgba(0,0,0,.15)';
+      } else {
+        btn.style.background = '#fff'; btn.style.color = styles[x][0];
+        btn.style.borderColor = styles[x][2]; btn.style.boxShadow = 'none';
+      }
+    });
+    if(p==='advance') advInit();
+    if(p==='fees')    feesInit();
   }
   </script>
 
@@ -1025,7 +1037,384 @@ function restoreEdits(){
   <!-- REPAYMENT SCHEDULES -->
   <div id="adv-sched" style="margin-top:18px;"></div>
 
+
 </div><!-- /page-advance -->
+
+<!-- ==================== CHILD FEES DEDUCTION MODULE ==================== -->
+<div id="page-fees" style="display:none;">
+
+  <div class="sec-title" style="margin-top:0;">&#x1F4DA; Child Fees Auto-Deduction Module</div>
+
+  <!-- FORM -->
+  <div class="controls" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;">
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Select Employee <span style="color:#b71c1c;">*</span></label>
+      <select id="fee-emp" onchange="feeFillPost()"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;background:#fafafa;">
+        <option value="">-- Select Employee --</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Post / Designation</label>
+      <input type="text" id="fee-post" readonly
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;background:#eceff1;color:#333;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Child Name <span style="color:#b71c1c;">*</span></label>
+      <input type="text" id="fee-child" placeholder="e.g. Rahul Sharma"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Class / Section</label>
+      <input type="text" id="fee-class" placeholder="e.g. 9-A, 10-B"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Fee Type</label>
+      <select id="fee-type"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;background:#fafafa;">
+        <option value="Tuition Fee">Tuition Fee</option>
+        <option value="Annual Fee">Annual Fee</option>
+        <option value="Exam Fee">Exam Fee</option>
+        <option value="Transport Fee">Transport Fee</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#6a1b9a;font-weight:bold;margin-bottom:3px;">&#x1F4B0; Monthly Deduction (&#8377;) <span style="color:#b71c1c;">*</span></label>
+      <input type="number" id="fee-amount" min="0" placeholder="e.g. 2000" oninput="feeCalcTotal()"
+        style="width:100%;padding:8px;border:2px solid #6a1b9a;border-radius:4px;font-size:13px;background:#f3e5f5;color:#4a148c;font-weight:bold;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">No. of Months <span style="color:#b71c1c;">*</span></label>
+      <input type="number" id="fee-months" min="1" max="12" placeholder="e.g. 12" oninput="feeCalcTotal()"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#2e7d32;font-weight:bold;margin-bottom:3px;">Total Annual Fee (&#8377;) <span style="font-size:10px;font-weight:normal;">(Auto)</span></label>
+      <input type="number" id="fee-total" readonly
+        style="width:100%;padding:8px;border:2px solid #2e7d32;border-radius:4px;font-size:13px;background:#e8f5e9;color:#1b5e20;font-weight:bold;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Starting Month <span style="color:#b71c1c;">*</span></label>
+      <input type="month" id="fee-start" oninput="feeCalcEnd()"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#e65100;font-weight:bold;margin-bottom:3px;">Ending Month <span style="font-size:10px;font-weight:normal;">(Auto)</span></label>
+      <input type="month" id="fee-end" readonly
+        style="width:100%;padding:8px;border:2px solid #e65100;border-radius:4px;font-size:12px;background:#fff3e0;color:#e65100;font-weight:bold;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Academic Year</label>
+      <input type="text" id="fee-year" placeholder="e.g. 2025-26"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Remarks</label>
+      <input type="text" id="fee-remarks" placeholder="Optional notes..."
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+  </div>
+
+  <!-- SAVE BUTTON -->
+  <div class="actions" style="margin-bottom:14px;">
+    <button onclick="feeSaveRecord()"
+      style="background:#6a1b9a;color:#fff;border:none;border-radius:6px;padding:10px 28px;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);">
+      &#x1F4BE; SAVE RECORD
+    </button>
+    <button onclick="feeExportCSV()" class="btn-blue">&#x1F4E5; Export CSV</button>
+    <button onclick="window.print()" class="btn-gray">&#x1F5A8; Print</button>
+    <button onclick="feeClearAll()" class="btn-red">&#x1F5D1; Clear All</button>
+  </div>
+
+  <!-- SUMMARY BAR -->
+  <div class="infobar" style="margin-bottom:12px;">
+    <div class="infobar-item"><span class="lbl">Total Records</span><span class="val" id="fi-cnt">0</span></div>
+    <div class="infobar-item hi"><span class="lbl">Total Annual Fees</span><span class="val" id="fi-ann">&#8377;0</span></div>
+    <div class="infobar-item"><span class="lbl">Total Deducted</span><span class="val" id="fi-ded">&#8377;0</span></div>
+    <div class="infobar-item hi"><span class="lbl">Balance Remaining</span><span class="val" id="fi-bal">&#8377;0</span></div>
+  </div>
+
+  <!-- RECORDS TABLE -->
+  <div class="table-wrap">
+    <table style="font-size:11px;width:100%;">
+      <thead>
+        <tr class="h1r">
+          <th rowspan="2" style="min-width:32px;">#</th>
+          <th rowspan="2" style="min-width:155px;">Employee Name</th>
+          <th rowspan="2" style="min-width:110px;">Post</th>
+          <th rowspan="2" style="min-width:110px;">Child Name</th>
+          <th rowspan="2" style="min-width:70px;">Class</th>
+          <th rowspan="2" style="min-width:80px;">Fee Type</th>
+          <th rowspan="2" style="background:#6a1b9a;color:#fff;min-width:78px;">Monthly Ded. (&#8377;)</th>
+          <th rowspan="2" style="min-width:50px;">Months</th>
+          <th rowspan="2" style="background:#2e7d32;color:#fff;min-width:75px;">Annual Fee (&#8377;)</th>
+          <th rowspan="2" style="min-width:68px;">Start</th>
+          <th rowspan="2" style="min-width:68px;">End</th>
+          <th rowspan="2" style="min-width:70px;">Acad. Year</th>
+          <th colspan="2" style="background:#1565c0;color:#fff;">Deduction Status</th>
+          <th rowspan="2" style="background:#b71c1c;color:#fff;min-width:75px;">Balance (&#8377;)</th>
+          <th rowspan="2" style="min-width:32px;">Del</th>
+        </tr>
+        <tr class="h2r">
+          <th style="background:#1565c0;color:#fff;min-width:62px;">Months Deducted</th>
+          <th style="background:#1565c0;color:#fff;min-width:72px;">Deducted (&#8377;)</th>
+        </tr>
+      </thead>
+      <tbody id="fee-tb"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="8" style="text-align:right;font-weight:bold;background:#263238;color:#fff;padding:6px;">TOTAL</td>
+          <td id="ff-ann" style="background:#263238;color:#fff;font-weight:bold;text-align:center;"></td>
+          <td colspan="3" style="background:#263238;"></td>
+          <td style="background:#263238;"></td>
+          <td id="ff-ded" style="background:#263238;color:#fff;font-weight:bold;text-align:center;"></td>
+          <td id="ff-bal" style="background:#b71c1c;color:#fff;font-weight:bold;text-align:center;"></td>
+          <td style="background:#263238;"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- MONTH-WISE SCHEDULE -->
+  <div id="fee-sched" style="margin-top:18px;"></div>
+
+</div><!-- /page-fees -->
+
+<!-- ==================== CHILD FEES SCRIPTS ==================== -->
+<script>
+(function(){
+
+  var FR = [];
+  try { FR = JSON.parse(localStorage.getItem('hema_fees') || '[]'); } catch(e){ FR = []; }
+
+  function fmt(n){ return Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0}); }
+  function persist(){ try{ localStorage.setItem('hema_fees', JSON.stringify(FR)); }catch(e){} }
+
+  /* ---- Populate employee list ---- */
+  window.feesInit = function(){
+    var sel = document.getElementById('fee-emp'); if(!sel) return;
+    var cur = sel.value;
+    var map = {};
+    var datasets = [];
+    if(typeof marData !== 'undefined' && Array.isArray(marData)) datasets = datasets.concat(marData);
+    if(typeof aprData !== 'undefined' && Array.isArray(aprData)) datasets = datasets.concat(aprData);
+    datasets.forEach(function(d){
+      if(d && d.name && d.name.trim()) map[d.name.trim() + '||' + (d.post||'').trim()] = 1;
+    });
+    var tb = document.getElementById('tb');
+    if(tb){
+      [].slice.call(tb.rows).forEach(function(r){
+        if(!r || r.classList.contains('hidden-row') || r.classList.contains('post-sep')) return;
+        var ni = r.querySelector('.name-col input'), pi = r.querySelector('.post-col input');
+        var nt = r.querySelector('.name-col'),        pt = r.querySelector('.post-col');
+        var name = (ni?ni.value:(nt?nt.textContent:'')).trim();
+        var post = (pi?pi.value:(pt?pt.textContent:'')).trim();
+        if(name) map[name + '||' + post] = 1;
+      });
+    }
+    sel.innerHTML = '<option value="">-- Select Employee --</option>';
+    Object.keys(map).sort().forEach(function(k){
+      var a = k.split('||');
+      var o = document.createElement('option');
+      o.value = k; o.textContent = a[0] + (a[1] ? ' (' + a[1] + ')' : '');
+      sel.appendChild(o);
+    });
+    sel.value = cur;
+    feeRenderTable();
+  };
+
+  /* ---- Auto-fill post ---- */
+  window.feeFillPost = function(){
+    var v = document.getElementById('fee-emp').value;
+    document.getElementById('fee-post').value = v.split('||')[1] || '';
+  };
+
+  /* ---- Auto-calculate total & end month ---- */
+  window.feeCalcTotal = function(){
+    var amt = parseFloat(document.getElementById('fee-amount').value)||0;
+    var mo  = parseInt(document.getElementById('fee-months').value)||0;
+    document.getElementById('fee-total').value = (amt > 0 && mo > 0) ? amt * mo : '';
+    feeCalcEnd();
+  };
+
+  window.feeCalcEnd = function(){
+    var mo = parseInt(document.getElementById('fee-months').value)||0;
+    var sv = document.getElementById('fee-start').value;
+    if(sv && mo > 0){
+      var p = sv.split('-'), y = parseInt(p[0]), m = parseInt(p[1]);
+      var em = m + mo - 1;
+      var ey = y + Math.floor((em-1)/12); em = ((em-1)%12)+1;
+      document.getElementById('fee-end').value = ey + '-' + (em<10?'0':'') + em;
+    } else {
+      document.getElementById('fee-end').value = '';
+    }
+  };
+
+  /* ---- Save record ---- */
+  window.feeSaveRecord = function(){
+    var ev  = document.getElementById('fee-emp').value;
+    var amt = parseFloat(document.getElementById('fee-amount').value)||0;
+    var mo  = parseInt(document.getElementById('fee-months').value)||0;
+    var sv  = document.getElementById('fee-start').value;
+    var child = document.getElementById('fee-child').value.trim();
+    if(!ev)    { alert('\u26A0\uFE0F Please select an employee!'); return; }
+    if(!child) { alert('\u26A0\uFE0F Please enter the child name!'); return; }
+    if(amt<=0) { alert('\u26A0\uFE0F Enter a valid monthly deduction amount!'); return; }
+    if(mo<=0)  { alert('\u26A0\uFE0F Enter number of months!'); return; }
+    if(!sv)    { alert('\u26A0\uFE0F Select a starting month!'); return; }
+    var parts = ev.split('||');
+    FR.push({
+      id      : Date.now(),
+      name    : parts[0],
+      post    : parts[1] || document.getElementById('fee-post').value || '',
+      child   : child,
+      cls     : document.getElementById('fee-class').value.trim() || '-',
+      ftype   : document.getElementById('fee-type').value || 'Tuition Fee',
+      amount  : amt,
+      months  : mo,
+      total   : amt * mo,
+      st      : sv,
+      en      : document.getElementById('fee-end').value,
+      year    : document.getElementById('fee-year').value.trim() || '-',
+      remarks : document.getElementById('fee-remarks').value.trim() || '-',
+      deducted: 0
+    });
+    persist();
+    feeRenderTable();
+    feeClearForm();
+    alert('\u2705 Child fees record saved successfully!');
+  };
+
+  function feeClearForm(){
+    ['fee-amount','fee-months','fee-total','fee-start','fee-end','fee-child','fee-class','fee-year','fee-remarks','fee-post'].forEach(function(id){
+      var el = document.getElementById(id); if(el) el.value = '';
+    });
+    document.getElementById('fee-emp').value = '';
+    document.getElementById('fee-type').value = 'Tuition Fee';
+  }
+
+  /* ---- Update deducted months ---- */
+  window.feeUpdateDed = function(i, v){
+    if(!FR[i]) return;
+    FR[i].deducted = Math.min(Math.max(parseInt(v)||0, 0), FR[i].months);
+    persist(); feeRenderTable();
+  };
+
+  /* ---- Delete ---- */
+  window.feeDelete = function(i){
+    if(!FR[i]) return;
+    if(!confirm('Delete fee record for ' + FR[i].name + ' (Child: ' + FR[i].child + ')?')) return;
+    FR.splice(i,1); persist(); feeRenderTable();
+  };
+
+  /* ---- Clear all ---- */
+  window.feeClearAll = function(){
+    if(!confirm('Clear ALL child fee records? This cannot be undone.')) return;
+    FR = []; persist(); feeRenderTable();
+  };
+
+  /* ---- Export CSV ---- */
+  window.feeExportCSV = function(){
+    if(!FR.length){ alert('No records to export.'); return; }
+    var c = '\uFEFFS.No.,Employee Name,Post,Child Name,Class,Fee Type,Monthly Deduction,No. of Months,Total Annual Fee,Start Month,End Month,Academic Year,Months Deducted,Total Deducted,Balance,Remarks\n';
+    FR.forEach(function(r,i){
+      var ded = Math.min(r.deducted * r.amount, r.total);
+      var bal = Math.max(r.total - ded, 0);
+      c += (i+1)+',"'+r.name+'","'+r.post+'","'+r.child+'","'+r.cls+'","'+r.ftype+'",'+r.amount+','+r.months+','+r.total+','+r.st+','+r.en+',"'+r.year+'",'+r.deducted+','+ded+','+bal+',"'+r.remarks+'"\n';
+    });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([c],{type:'text/csv;charset=utf-8;'}));
+    a.download = 'Hema_ChildFees_Deductions.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+
+  window.feeRenderTable = function(){ renderFeeTable(); };
+
+  function renderFeeTable(){
+    var tbody = document.getElementById('fee-tb'); if(!tbody) return;
+    tbody.innerHTML = '';
+    var tA=0, tD=0, tB=0;
+    FR.forEach(function(r,i){
+      var ded = Math.min(r.deducted * r.amount, r.total);
+      var bal = Math.max(r.total - ded, 0);
+      tA += r.total; tD += ded; tB += bal;
+      var sd = r.st ? r.st.replace(/(\d{4})-(\d{2})/, '$2/$1') : '';
+      var ed = r.en ? r.en.replace(/(\d{4})-(\d{2})/, '$2/$1') : '';
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="sno-col">' + (i+1) + '</td>' +
+        '<td class="name-col" style="text-align:left;font-weight:bold;">' + r.name + '</td>' +
+        '<td class="post-col">' + (r.post||'') + '</td>' +
+        '<td style="font-weight:bold;color:#6a1b9a;text-align:left;">' + r.child + '</td>' +
+        '<td style="text-align:center;">' + r.cls + '</td>' +
+        '<td style="text-align:center;">' + r.ftype + '</td>' +
+        '<td style="background:#f3e5f5;font-weight:bold;color:#6a1b9a;text-align:center;">' + fmt(r.amount) + '</td>' +
+        '<td style="text-align:center;">' + r.months + '</td>' +
+        '<td style="background:#e8f5e9;font-weight:bold;color:#2e7d32;text-align:center;">' + fmt(r.total) + '</td>' +
+        '<td style="text-align:center;">' + sd + '</td>' +
+        '<td style="text-align:center;">' + ed + '</td>' +
+        '<td style="text-align:center;">' + r.year + '</td>' +
+        '<td style="text-align:center;">' +
+          '<input type="number" min="0" max="' + r.months + '" value="' + r.deducted + '" ' +
+          'style="width:52px;padding:3px;border:1px solid #90a4ae;border-radius:3px;text-align:center;font-size:11px;" ' +
+          'onchange="feeUpdateDed(' + i + ',this.value)">' +
+        '</td>' +
+        '<td style="background:#e3f2fd;font-weight:bold;color:#1565c0;text-align:center;">' + fmt(ded) + '</td>' +
+        '<td style="background:' + (bal>0?'#ffebee':'#e8f5e9') + ';font-weight:bold;color:' + (bal>0?'#b71c1c':'#2e7d32') + ';text-align:center;">' + fmt(bal) + '</td>' +
+        '<td><button class="del-btn" onclick="feeDelete(' + i + ')">&#x2715;</button></td>';
+      tbody.appendChild(tr);
+    });
+    function sv(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+    sv('ff-ann',fmt(tA)); sv('ff-ded',fmt(tD)); sv('ff-bal',fmt(tB));
+    sv('fi-cnt', FR.length);
+    sv('fi-ann','\u20B9'+fmt(tA)); sv('fi-ded','\u20B9'+fmt(tD)); sv('fi-bal','\u20B9'+fmt(tB));
+    renderFeeSchedules();
+  }
+
+  function renderFeeSchedules(){
+    var w = document.getElementById('fee-sched'); if(!w) return;
+    if(!FR.length){ w.innerHTML=''; return; }
+    var h = '<div class="sec-title" style="margin-top:8px;">&#x1F4C5; Month-wise Fee Deduction Schedules</div>';
+    FR.forEach(function(r,ri){
+      var ded = Math.min(r.deducted * r.amount, r.total);
+      var bal = Math.max(r.total - ded, 0);
+      h += '<div style="margin-bottom:16px;border:1px solid #ce93d8;border-radius:6px;padding:12px;">' +
+        '<div style="font-weight:bold;color:#4a148c;font-size:12px;margin-bottom:8px;">' +
+        (ri+1) + '. ' + r.name + ' &nbsp;&bull;&nbsp; Child: <span style="color:#6a1b9a;">' + r.child + '</span>' +
+        ' (' + r.cls + ') &nbsp;&bull;&nbsp; ' + r.ftype +
+        ' &nbsp;&bull;&nbsp; Monthly: &#8377;' + fmt(r.amount) +
+        ' &nbsp;&bull;&nbsp; Annual: &#8377;' + fmt(r.total) +
+        ' &nbsp;&bull;&nbsp; Deducted: &#8377;' + fmt(ded) +
+        ' &nbsp;&bull;&nbsp; <span style="color:' + (bal>0?'#b71c1c':'#2e7d32') + '">Balance: &#8377;' + fmt(bal) + '</span></div>' +
+        '<div class="table-wrap"><table style="font-size:11px;width:auto;">' +
+        '<thead><tr class="h2r">' +
+        '<th style="min-width:32px;">#</th>' +
+        '<th style="min-width:90px;">Month / Year</th>' +
+        '<th style="min-width:100px;">Amount (&#8377;)</th>' +
+        '<th style="min-width:110px;">Status</th>' +
+        '</tr></thead><tbody>';
+      var sp = r.st.split('-'), yr = parseInt(sp[0]), mo = parseInt(sp[1]);
+      for(var j=0; j<r.months; j++){
+        var m = mo+j, y = yr+Math.floor((m-1)/12); m = ((m-1)%12)+1;
+        var lbl = (m<10?'0':'')+m+'/'+y;
+        var paid = (j < r.deducted);
+        h += '<tr style="background:' + (paid?'#f3e5f5':'#fff') + '">' +
+          '<td style="text-align:center;">' + (j+1) + '</td>' +
+          '<td style="text-align:center;">' + lbl + '</td>' +
+          '<td style="text-align:center;font-weight:bold;color:' + (paid?'#6a1b9a':'#e65100') + '">&#8377;' + fmt(r.amount) + '</td>' +
+          '<td style="text-align:center;font-weight:bold;background:' + (paid?'#ce93d8':'#ffebee') + ';color:' + (paid?'#4a148c':'#b71c1c') + '">' +
+          (paid ? '&#x2705; Deducted' : '&#x23F3; Pending') + '</td></tr>';
+      }
+      h += '</tbody></table></div></div>';
+    });
+    w.innerHTML = h;
+  }
+
+})();
+</script>
+
 
 <!-- ==================== ADVANCE PAYMENT SCRIPTS ==================== -->
 <script>
