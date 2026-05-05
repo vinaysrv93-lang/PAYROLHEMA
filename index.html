@@ -117,20 +117,25 @@ tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;
       style="background:#fff;color:#6a1b9a;border:2px solid #6a1b9a;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;">
       &#x1F4DA; Child Fees Deduction
     </button>
+    <button id="nav-apply" onclick="showPage('apply')"
+      style="background:#fff;color:#00695c;border:2px solid #00695c;border-radius:22px;padding:10px 26px;font-size:13px;font-weight:bold;cursor:pointer;">
+      &#x1F4DD; Apply for Advance
+    </button>
   </div>
 
   <script>
   /* ===== PAGE SWITCHER ===== */
   function showPage(p){
-    ['main','advance','fees'].forEach(function(x){
+    ['main','advance','fees','apply'].forEach(function(x){
       var d = document.getElementById('page-'+x); if(d) d.style.display = (x===p)?'':'none';
     });
     var styles = {
       main:    ['#1a237e','#fff','#1a237e'],
       advance: ['#e65100','#fff','#e65100'],
-      fees:    ['#6a1b9a','#fff','#6a1b9a']
+      fees:    ['#6a1b9a','#fff','#6a1b9a'],
+      apply:   ['#00695c','#fff','#00695c']
     };
-    ['main','advance','fees'].forEach(function(x){
+    ['main','advance','fees','apply'].forEach(function(x){
       var btn = document.getElementById('nav-'+x); if(!btn) return;
       if(x===p){
         btn.style.background = styles[x][0]; btn.style.color = styles[x][1];
@@ -142,6 +147,7 @@ tfoot td,tfoot th{background:#263238;color:#fff;font-weight:bold;font-size:11px;
     });
     if(p==='advance') advInit();
     if(p==='fees')    feesInit();
+    if(p==='apply')   applyInit();
   }
   </script>
 
@@ -1180,7 +1186,410 @@ function restoreEdits(){
   <!-- MONTH-WISE SCHEDULE -->
   <div id="fee-sched" style="margin-top:18px;"></div>
 
+
 </div><!-- /page-fees -->
+
+<!-- ==================== ADVANCE APPLICATION MODULE ==================== -->
+<div id="page-apply" style="display:none;">
+
+  <div class="sec-title" style="margin-top:0;">&#x1F4DD; Employee Advance Application Portal</div>
+  <div style="background:#e0f2f1;border:1px solid #80cbc4;border-radius:6px;padding:10px 16px;margin-bottom:14px;font-size:12px;color:#00695c;">
+    &#x2139;&#xFE0F; <strong>How it works:</strong> Employee fills this form and submits the advance request &rarr; 
+    Application appears in the <strong>Pending Approvals</strong> section below &rarr; 
+    Admin clicks <strong>&#x2705; Approve</strong> &rarr; Record <strong>automatically moves to the Advance Payment module</strong>.
+  </div>
+
+  <!-- APPLICATION FORM -->
+  <div class="sec-title" style="background:linear-gradient(90deg,#00695c,#00897b);">&#x270D; Submit Advance Application</div>
+  <div class="controls" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;">
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Select Employee <span style="color:#b71c1c;">*</span></label>
+      <select id="app-emp" onchange="appFillPost()"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;background:#fafafa;">
+        <option value="">-- Select Employee --</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Post / Designation</label>
+      <input type="text" id="app-post" readonly
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;background:#eceff1;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Advance Amount Required (&#8377;) <span style="color:#b71c1c;">*</span></label>
+      <input type="number" id="app-amount" min="0" placeholder="e.g. 25000" oninput="appAutoCalc()"
+        style="width:100%;padding:8px;border:2px solid #00695c;border-radius:4px;font-size:12px;background:#e0f2f1;font-weight:bold;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">No. of Repayments (Months) <span style="color:#b71c1c;">*</span></label>
+      <input type="number" id="app-count" min="1" max="60" placeholder="e.g. 6" oninput="appAutoCalc()"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#2e7d32;font-weight:bold;margin-bottom:3px;">Monthly EMI (&#8377;) <span style="font-size:10px;font-weight:normal;">(Auto)</span></label>
+      <input type="number" id="app-emi" readonly
+        style="width:100%;padding:8px;border:2px solid #2e7d32;border-radius:4px;font-size:12px;background:#e8f5e9;color:#1b5e20;font-weight:bold;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Proposed Start Month <span style="color:#b71c1c;">*</span></label>
+      <input type="month" id="app-start" oninput="appAutoCalc()"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#e65100;font-weight:bold;margin-bottom:3px;">End Month <span style="font-size:10px;font-weight:normal;">(Auto)</span></label>
+      <input type="month" id="app-end" readonly
+        style="width:100%;padding:8px;border:2px solid #e65100;border-radius:4px;font-size:12px;background:#fff3e0;color:#e65100;font-weight:bold;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Purpose / Reason <span style="color:#b71c1c;">*</span></label>
+      <input type="text" id="app-reason" placeholder="e.g. Medical emergency, House repair..."
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Application Date</label>
+      <input type="date" id="app-date"
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+    <div style="grid-column:span 3;">
+      <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Supporting Details / Remarks</label>
+      <input type="text" id="app-remarks" placeholder="Any additional details to support the application..."
+        style="width:100%;padding:8px;border:1px solid #90a4ae;border-radius:4px;font-size:12px;">
+    </div>
+  </div>
+
+  <div class="actions" style="margin-bottom:18px;">
+    <button onclick="appSubmit()"
+      style="background:#00695c;color:#fff;border:none;border-radius:6px;padding:10px 28px;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);">
+      &#x1F4E8; SUBMIT APPLICATION
+    </button>
+    <button onclick="appClearForm()" class="btn-gray">&#x21BA; Clear Form</button>
+  </div>
+
+  <!-- PENDING APPROVALS -->
+  <div class="sec-title" style="background:linear-gradient(90deg,#e65100,#f4511e);">&#x23F3; Pending Approvals <span id="app-pending-count" style="background:#fff;color:#e65100;border-radius:10px;padding:1px 10px;margin-left:8px;font-size:12px;">0</span></div>
+
+  <div class="table-wrap" style="margin-bottom:18px;">
+    <table style="font-size:11px;width:100%;">
+      <thead>
+        <tr class="h1r">
+          <th style="min-width:32px;">#</th>
+          <th style="min-width:155px;">Employee Name</th>
+          <th style="min-width:110px;">Post</th>
+          <th style="min-width:88px;">App. Date</th>
+          <th style="min-width:140px;">Reason</th>
+          <th style="background:#00695c;color:#fff;min-width:80px;">Amount (&#8377;)</th>
+          <th style="min-width:55px;">EMIs</th>
+          <th style="background:#2e7d32;color:#fff;min-width:75px;">Monthly EMI (&#8377;)</th>
+          <th style="min-width:70px;">Start Month</th>
+          <th style="min-width:70px;">End Month</th>
+          <th style="min-width:160px;">Remarks</th>
+          <th style="background:#2e7d32;color:#fff;min-width:100px;">&#x2705; Approve</th>
+          <th style="background:#b71c1c;color:#fff;min-width:80px;">&#x274C; Reject</th>
+        </tr>
+      </thead>
+      <tbody id="app-pending-tb"></tbody>
+    </table>
+  </div>
+
+  <!-- APPROVED HISTORY -->
+  <div class="sec-title" style="background:linear-gradient(90deg,#2e7d32,#388e3c);">&#x2705; Approved Applications History <span id="app-approved-count" style="background:#fff;color:#2e7d32;border-radius:10px;padding:1px 10px;margin-left:8px;font-size:12px;">0</span></div>
+
+  <div class="table-wrap" style="margin-bottom:18px;">
+    <table style="font-size:11px;width:100%;">
+      <thead>
+        <tr class="h1r">
+          <th style="min-width:32px;">#</th>
+          <th style="min-width:155px;">Employee Name</th>
+          <th style="min-width:110px;">Post</th>
+          <th style="min-width:88px;">App. Date</th>
+          <th style="min-width:140px;">Reason</th>
+          <th style="background:#00695c;color:#fff;min-width:80px;">Amount (&#8377;)</th>
+          <th style="min-width:55px;">EMIs</th>
+          <th style="background:#2e7d32;color:#fff;min-width:75px;">Monthly EMI (&#8377;)</th>
+          <th style="min-width:70px;">Start Month</th>
+          <th style="min-width:70px;">End Month</th>
+          <th style="min-width:88px;">Approved On</th>
+          <th style="background:#2e7d32;color:#fff;min-width:80px;">Status</th>
+        </tr>
+      </thead>
+      <tbody id="app-approved-tb"></tbody>
+    </table>
+  </div>
+
+  <!-- REJECTED HISTORY -->
+  <div class="sec-title" style="background:linear-gradient(90deg,#b71c1c,#c62828);">&#x274C; Rejected Applications <span id="app-rejected-count" style="background:#fff;color:#b71c1c;border-radius:10px;padding:1px 10px;margin-left:8px;font-size:12px;">0</span></div>
+  <div class="table-wrap">
+    <table style="font-size:11px;width:100%;">
+      <thead>
+        <tr class="h1r">
+          <th style="min-width:32px;">#</th>
+          <th style="min-width:155px;">Employee Name</th>
+          <th style="min-width:110px;">Post</th>
+          <th style="min-width:88px;">App. Date</th>
+          <th style="min-width:140px;">Reason</th>
+          <th style="background:#00695c;color:#fff;min-width:80px;">Amount (&#8377;)</th>
+          <th style="min-width:88px;">Rejected On</th>
+          <th style="min-width:160px;">Rejection Reason</th>
+          <th style="background:#b71c1c;color:#fff;min-width:80px;">Status</th>
+        </tr>
+      </thead>
+      <tbody id="app-rejected-tb"></tbody>
+    </table>
+  </div>
+
+</div><!-- /page-apply -->
+
+<!-- ==================== ADVANCE APPLICATION SCRIPTS ==================== -->
+<script>
+(function(){
+
+  var APPS = [];
+  try { APPS = JSON.parse(localStorage.getItem('hema_apps') || '[]'); } catch(e){ APPS = []; }
+
+  function fmt(n){ return Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0}); }
+  function today(){ return new Date().toISOString().slice(0,10); }
+  function persist(){ try{ localStorage.setItem('hema_apps', JSON.stringify(APPS)); }catch(e){} }
+
+  /* ---- Populate employee list ---- */
+  window.applyInit = function(){
+    var sel = document.getElementById('app-emp'); if(!sel) return;
+    var cur = sel.value;
+    var map = {};
+    var datasets = [];
+    if(typeof marData !== 'undefined' && Array.isArray(marData)) datasets = datasets.concat(marData);
+    if(typeof aprData !== 'undefined' && Array.isArray(aprData)) datasets = datasets.concat(aprData);
+    datasets.forEach(function(d){
+      if(d && d.name && d.name.trim()) map[d.name.trim() + '||' + (d.post||'').trim()] = 1;
+    });
+    var tb = document.getElementById('tb');
+    if(tb){
+      [].slice.call(tb.rows).forEach(function(r){
+        if(!r || r.classList.contains('hidden-row') || r.classList.contains('post-sep')) return;
+        var ni = r.querySelector('.name-col input'), pi = r.querySelector('.post-col input');
+        var nt = r.querySelector('.name-col'),        pt = r.querySelector('.post-col');
+        var name = (ni?ni.value:(nt?nt.textContent:'')).trim();
+        var post = (pi?pi.value:(pt?pt.textContent:'')).trim();
+        if(name) map[name + '||' + post] = 1;
+      });
+    }
+    sel.innerHTML = '<option value="">-- Select Employee --</option>';
+    Object.keys(map).sort().forEach(function(k){
+      var a = k.split('||');
+      var o = document.createElement('option');
+      o.value = k; o.textContent = a[0] + (a[1] ? ' (' + a[1] + ')' : '');
+      sel.appendChild(o);
+    });
+    sel.value = cur;
+    appRenderAll();
+  };
+
+  /* ---- Auto-fill post ---- */
+  window.appFillPost = function(){
+    var v = document.getElementById('app-emp').value;
+    document.getElementById('app-post').value = v.split('||')[1] || '';
+  };
+
+  /* ---- Auto calc EMI + end month ---- */
+  window.appAutoCalc = function(){
+    var amt = parseFloat(document.getElementById('app-amount').value)||0;
+    var cnt = parseInt(document.getElementById('app-count').value)||0;
+    var sv  = document.getElementById('app-start').value;
+    document.getElementById('app-emi').value = (amt>0 && cnt>0) ? Math.ceil(amt/cnt) : '';
+    if(sv && cnt>0){
+      var p=sv.split('-'), y=parseInt(p[0]), m=parseInt(p[1]);
+      var em=m+cnt-1, ey=y+Math.floor((em-1)/12); em=((em-1)%12)+1;
+      document.getElementById('app-end').value = ey+'-'+(em<10?'0':'')+em;
+    } else { document.getElementById('app-end').value=''; }
+  };
+
+  /* ---- Submit application ---- */
+  window.appSubmit = function(){
+    var ev  = document.getElementById('app-emp').value;
+    var amt = parseFloat(document.getElementById('app-amount').value)||0;
+    var cnt = parseInt(document.getElementById('app-count').value)||0;
+    var sv  = document.getElementById('app-start').value;
+    var rs  = document.getElementById('app-reason').value.trim();
+    if(!ev)  { alert('\u26A0\uFE0F Please select an employee!'); return; }
+    if(amt<=0){ alert('\u26A0\uFE0F Enter a valid advance amount!'); return; }
+    if(cnt<=0){ alert('\u26A0\uFE0F Enter number of repayment months!'); return; }
+    if(!sv)  { alert('\u26A0\uFE0F Select a proposed start month!'); return; }
+    if(!rs)  { alert('\u26A0\uFE0F Please enter the reason/purpose!'); return; }
+    var parts = ev.split('||');
+    APPS.push({
+      id      : Date.now(),
+      name    : parts[0],
+      post    : parts[1] || document.getElementById('app-post').value || '',
+      appDate : document.getElementById('app-date').value || today(),
+      reason  : rs,
+      remarks : document.getElementById('app-remarks').value.trim() || '-',
+      amount  : amt,
+      count   : cnt,
+      emi     : Math.ceil(amt/cnt),
+      start   : sv,
+      end     : document.getElementById('app-end').value,
+      status  : 'pending',
+      actionDate : '',
+      rejectReason: ''
+    });
+    persist();
+    appRenderAll();
+    appClearForm();
+    alert('\u2705 Application submitted successfully! Awaiting admin approval.');
+  };
+
+  /* ---- Clear form ---- */
+  window.appClearForm = function(){
+    ['app-amount','app-count','app-emi','app-start','app-end','app-date','app-remarks','app-reason','app-post'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+    document.getElementById('app-emp').value='';
+  };
+
+  /* ---- APPROVE ---- */
+  window.appApprove = function(i){
+    var app = APPS[i]; if(!app) return;
+    if(!confirm('Approve advance application for ' + app.name + ' (\u20B9' + fmt(app.amount) + ')? \n\nThis will automatically add the record to the Advance Payment module.')) return;
+    app.status = 'approved';
+    app.actionDate = today();
+
+    // AUTO-PUSH to Advance Payment module
+    var AR = [];
+    try { AR = JSON.parse(localStorage.getItem('hema_adv') || '[]'); } catch(e){ AR=[]; }
+    AR.push({
+      id      : Date.now(),
+      name    : app.name,
+      post    : app.post,
+      dg      : app.actionDate,
+      rs      : app.reason,
+      mode    : '',
+      txnid   : '-',
+      paydate : '',
+      tot     : app.amount,
+      cnt     : app.count,
+      emi     : app.emi,
+      st      : app.start,
+      en      : app.end,
+      pd      : 0
+    });
+    try { localStorage.setItem('hema_adv', JSON.stringify(AR)); } catch(e){}
+    persist();
+    appRenderAll();
+    alert('\u2705 Application APPROVED!\n\n' + app.name + '\'s advance of \u20B9' + fmt(app.amount) + ' has been automatically added to the Advance Payment module.\n\nSwitch to the \"\u1F4B8 Advance Payment\" tab to view it.');
+  };
+
+  /* ---- REJECT ---- */
+  window.appReject = function(i){
+    var app = APPS[i]; if(!app) return;
+    var reason = prompt('Enter rejection reason for ' + app.name + ':');
+    if(reason === null) return;
+    app.status = 'rejected';
+    app.actionDate = today();
+    app.rejectReason = reason.trim() || 'Not specified';
+    persist();
+    appRenderAll();
+    alert('\u274C Application rejected for ' + app.name + '.');
+  };
+
+  function appRenderAll(){
+    var pending  = APPS.filter(function(a){ return a.status==='pending'; });
+    var approved = APPS.filter(function(a){ return a.status==='approved'; });
+    var rejected = APPS.filter(function(a){ return a.status==='rejected'; });
+
+    function sv(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+    sv('app-pending-count',  pending.length);
+    sv('app-approved-count', approved.length);
+    sv('app-rejected-count', rejected.length);
+
+    // Pending table
+    var ptb = document.getElementById('app-pending-tb'); if(!ptb) return;
+    ptb.innerHTML = '';
+    if(!pending.length){
+      ptb.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:14px;color:#888;font-style:italic;">No pending applications</td></tr>';
+    } else {
+      pending.forEach(function(app, pi){
+        var realIdx = APPS.indexOf(app);
+        var sd = app.start ? app.start.replace(/(\d{4})-(\d{2})/, '$2/$1') : '';
+        var ed = app.end   ? app.end.replace(/(\d{4})-(\d{2})/, '$2/$1')   : '';
+        var tr = document.createElement('tr');
+        tr.style.background = '#fffde7';
+        tr.innerHTML =
+          '<td class="sno-col">' + (pi+1) + '</td>' +
+          '<td class="name-col" style="text-align:left;font-weight:bold;">' + app.name + '</td>' +
+          '<td class="post-col">' + app.post + '</td>' +
+          '<td style="text-align:center;">' + app.appDate + '</td>' +
+          '<td style="text-align:left;">' + app.reason + '</td>' +
+          '<td style="background:#e0f2f1;font-weight:bold;color:#00695c;text-align:center;">' + fmt(app.amount) + '</td>' +
+          '<td style="text-align:center;">' + app.count + '</td>' +
+          '<td style="background:#e8f5e9;font-weight:bold;color:#2e7d32;text-align:center;">' + fmt(app.emi) + '</td>' +
+          '<td style="text-align:center;">' + sd + '</td>' +
+          '<td style="text-align:center;">' + ed + '</td>' +
+          '<td style="text-align:left;font-size:10px;color:#666;">' + app.remarks + '</td>' +
+          '<td style="text-align:center;">' +
+            '<button onclick="appApprove(' + realIdx + ')" ' +
+            'style="background:#2e7d32;color:#fff;border:none;border-radius:4px;padding:5px 12px;font-size:11px;font-weight:bold;cursor:pointer;">&#x2705; Approve</button>' +
+          '</td>' +
+          '<td style="text-align:center;">' +
+            '<button onclick="appReject(' + realIdx + ')" ' +
+            'style="background:#b71c1c;color:#fff;border:none;border-radius:4px;padding:5px 12px;font-size:11px;font-weight:bold;cursor:pointer;">&#x274C; Reject</button>' +
+          '</td>';
+        ptb.appendChild(tr);
+      });
+    }
+
+    // Approved table
+    var atb = document.getElementById('app-approved-tb'); if(!atb) return;
+    atb.innerHTML = '';
+    if(!approved.length){
+      atb.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:14px;color:#888;font-style:italic;">No approved applications yet</td></tr>';
+    } else {
+      approved.forEach(function(app, ai){
+        var sd = app.start ? app.start.replace(/(\d{4})-(\d{2})/, '$2/$1') : '';
+        var ed = app.end   ? app.end.replace(/(\d{4})-(\d{2})/, '$2/$1')   : '';
+        var tr = document.createElement('tr');
+        tr.style.background = '#f1f8e9';
+        tr.innerHTML =
+          '<td class="sno-col">' + (ai+1) + '</td>' +
+          '<td class="name-col" style="text-align:left;font-weight:bold;">' + app.name + '</td>' +
+          '<td class="post-col">' + app.post + '</td>' +
+          '<td style="text-align:center;">' + app.appDate + '</td>' +
+          '<td style="text-align:left;">' + app.reason + '</td>' +
+          '<td style="background:#e0f2f1;font-weight:bold;color:#00695c;text-align:center;">' + fmt(app.amount) + '</td>' +
+          '<td style="text-align:center;">' + app.count + '</td>' +
+          '<td style="background:#e8f5e9;font-weight:bold;color:#2e7d32;text-align:center;">' + fmt(app.emi) + '</td>' +
+          '<td style="text-align:center;">' + sd + '</td>' +
+          '<td style="text-align:center;">' + ed + '</td>' +
+          '<td style="text-align:center;color:#2e7d32;font-weight:bold;">' + app.actionDate + '</td>' +
+          '<td style="background:#c8e6c9;color:#1b5e20;font-weight:bold;text-align:center;">&#x2705; Approved &rarr; Advance</td>';
+        atb.appendChild(tr);
+      });
+    }
+
+    // Rejected table
+    var rtb = document.getElementById('app-rejected-tb'); if(!rtb) return;
+    rtb.innerHTML = '';
+    if(!rejected.length){
+      rtb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:14px;color:#888;font-style:italic;">No rejected applications</td></tr>';
+    } else {
+      rejected.forEach(function(app, ri){
+        var tr = document.createElement('tr');
+        tr.style.background = '#ffebee';
+        tr.innerHTML =
+          '<td class="sno-col">' + (ri+1) + '</td>' +
+          '<td class="name-col" style="text-align:left;font-weight:bold;">' + app.name + '</td>' +
+          '<td class="post-col">' + app.post + '</td>' +
+          '<td style="text-align:center;">' + app.appDate + '</td>' +
+          '<td style="text-align:left;">' + app.reason + '</td>' +
+          '<td style="background:#e0f2f1;font-weight:bold;color:#00695c;text-align:center;">' + fmt(app.amount) + '</td>' +
+          '<td style="text-align:center;color:#b71c1c;font-weight:bold;">' + app.actionDate + '</td>' +
+          '<td style="text-align:left;color:#c62828;font-style:italic;">' + app.rejectReason + '</td>' +
+          '<td style="background:#ffcdd2;color:#b71c1c;font-weight:bold;text-align:center;">&#x274C; Rejected</td>';
+        rtb.appendChild(tr);
+      });
+    }
+  }
+
+})();
+</script>
+
 
 <!-- ==================== CHILD FEES SCRIPTS ==================== -->
 <script>
