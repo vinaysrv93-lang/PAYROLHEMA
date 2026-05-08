@@ -2326,7 +2326,7 @@ window.feeFillPost = function(){
     return '<td class="sno-col">'+(i+1)+'</td>'+
       '<td class="name-col" style="text-align:left;font-weight:bold;">'+app.name+'</td>'+
       '<td class="post-col">'+app.post+'</td>'+
-      '<td style="text-align:center;">'+fmtDate(app.appDate)+'</td>'+
+      '<td style="text-align:center;">'+app.appDate+'</td>'+
       '<td style="text-align:left;">'+app.reason+'</td>'+
       '<td style="font-weight:bold;color:#00695c;text-align:center;background:#e0f2f1;">'+fmt(app.amount)+'</td>'+
       '<td style="text-align:center;">'+app.count+'</td>'+
@@ -2550,7 +2550,6 @@ window.feeFillPost = function(){
   window.appGenerateApprovalPDF = function(app){
     var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     function fmtMon(v){ if(!v) return '-'; var p=v.split('-'); return mn[parseInt(p[1])-1]+'-'+p[0]; }
-    function fmtDate(v){ if(!v) return '-'; var p=v.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
     function fmtAmt(n){ return '\u20B9 '+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0}); }
     var schedRows = '';
     if(app.start && app.count){
@@ -2614,7 +2613,8 @@ window.feeFillPost = function(){
         '.sn { font-size:11px; font-weight:bold; color:#1a237e; }'+
         '.st { font-size:10px; color:#555; }'+
         /* ---- SEAL & FOOTER ---- */
-        
+        '.seal-row { display:flex; justify-content:center; align-items:center; margin-top:16px; }'+
+        '.seal { display:inline-block; border:3px double #1a237e; border-radius:50%; width:75px; height:75px; line-height:75px; text-align:center; font-size:9px; font-weight:bold; color:#1a237e; letter-spacing:0.5px; }'+
         '.footer { border-top:2px solid #1a237e; margin-top:14px; padding-top:6px; text-align:center; font-size:9.5px; color:#555; font-style:italic; }'+
         '@media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }'+
       '</style>'+
@@ -2628,25 +2628,26 @@ window.feeFillPost = function(){
             '<div class="lh-addr">Bhopal, Madhya Pradesh</div>'+
             '<div class="lh-tag">तमसो मा ज्योतिगर्मय &nbsp;|&nbsp; सत्यमेव जयते</div>'+
           '</div>'+
+          '<img src="'+LOGO+'" class="lh-logo" alt="HES Logo">'+
         '</div>'+
         '<div class="doc-title">ADVANCE SALARY APPROVAL LETTER</div>'+
         '<div class="ref-row">'+
           '<span><strong>Ref No:</strong> '+refNo+'</span>'+
-          '<span><strong>Date:</strong> '+fmtDate(app.actionDate)+'</span>'+
+          '<span><strong>Date:</strong> '+app.actionDate+'</span>'+
         '</div>'+
         /* EMPLOYEE DETAILS */
         '<div class="sch-title">Employee Details</div>'+
         '<table class="det">'+
           '<tr><th>Employee Name</th><td style="font-weight:bold;color:#1a237e;font-size:12.5px;">'+app.name+'</td></tr>'+
           '<tr><th>Designation / Post</th><td>'+app.post+'</td></tr>'+
-          '<tr><th>Date of Application</th><td>'+fmtDate(app.appDate)+'</td></tr>'+
+          '<tr><th>Date of Application</th><td>'+app.appDate+'</td></tr>'+
           '<tr><th>Reason / Purpose</th><td>'+app.reason+'</td></tr>'+
           '<tr><th>Total Advance Amount</th><td style="font-weight:bold;color:#00695c;font-size:13px;">'+fmtAmt(app.amount)+'</td></tr>'+
           '<tr><th>Repayment Months</th><td>'+app.count+' months</td></tr>'+
           '<tr><th>Monthly EMI</th><td style="font-weight:bold;color:#1565c0;">'+fmtAmt(app.emi)+' per month</td></tr>'+
           '<tr><th>Repayment Start</th><td>'+fmtMon(app.start)+'</td></tr>'+
           '<tr><th>Repayment End</th><td>'+fmtMon(app.end)+'</td></tr>'+
-          '<tr><th>Final Approval Date</th><td style="font-weight:bold;color:#2e7d32;">'+fmtDate(app.actionDate)+'</td></tr>'+
+          '<tr><th>Final Approval Date</th><td style="font-weight:bold;color:#2e7d32;">'+app.actionDate+'</td></tr>'+
         '</table>'+
         /* SCHEDULE */
         '<div class="sch-title">EMI Repayment Schedule</div>'+
@@ -2678,8 +2679,8 @@ window.feeFillPost = function(){
               '<div class="sig-post">'+app.post+' (Applicant)</div>'+
             '</div>'+
             '<div style="text-align:right;font-size:11px;color:#444;">'+
-              '<div>Application Date: <strong>'+fmtDate(app.appDate)+'</strong></div>'+
-              '<div style="margin-top:6px;">Approval Date: <strong>'+fmtDate(app.actionDate)+'</strong></div>'+
+              '<div>Application Date: <strong>'+app.appDate+'</strong></div>'+
+              '<div style="margin-top:6px;">Approval Date: <strong>'+app.actionDate+'</strong></div>'+
             '</div>'+
           '</div>'+
           /* Authority */
@@ -2690,7 +2691,7 @@ window.feeFillPost = function(){
             '<div class="sb"><div class="sl"></div><div class="sn">Secretary</div><div class="st">Hema Education Society, Bhopal</div></div>'+
           '</div>'+
         '</div>'+
-        
+        '<div class="seal-row"><div class="seal">OFFICE<br>SEAL</div></div>'+
         '<div class="footer">This is a computer-generated approval letter issued by Hema Education Society, Bhopal. | Ref: '+refNo+'</div>'+
       '</div>'+
       '</body></html>';
@@ -2807,7 +2808,7 @@ window.feeFillPost = function(){
         tr.innerHTML='<td style="text-align:center;">'+(ai+1)+'</td>'+
           '<td style="text-align:left;font-weight:bold;">'+app.name+'</td>'+
           '<td>'+app.post+'</td>'+
-          '<td style="text-align:center;">'+fmtDate(app.appDate)+'</td>'+
+          '<td style="text-align:center;">'+app.appDate+'</td>'+
           '<td>'+app.reason+'</td>'+
           '<td style="background:#e0f2f1;font-weight:bold;color:#00695c;text-align:center;">'+fmt(app.amount)+'</td>'+
           '<td style="text-align:center;">'+app.count+'</td>'+
@@ -2816,7 +2817,7 @@ window.feeFillPost = function(){
           '<td style="font-size:10px;color:#6a1b9a;">'+app.principalRemark+'</td>'+
           '<td style="font-size:10px;color:#e65100;">'+app.treasurerRemark+'</td>'+
           '<td style="font-size:10px;color:#2e7d32;">'+app.secretaryRemark+'</td>'+
-          '<td style="text-align:center;font-weight:bold;color:#2e7d32;">'+fmtDate(app.actionDate)+'</td>'+
+          '<td style="text-align:center;font-weight:bold;color:#2e7d32;">'+app.actionDate+'</td>'+
           '<td style="background:#c8e6c9;color:#1b5e20;font-weight:bold;text-align:center;">&#9989; Approved</td>';
         td.appendChild(tr);
       });
@@ -2832,12 +2833,12 @@ window.feeFillPost = function(){
         tr.innerHTML='<td style="text-align:center;">'+(ai+1)+'</td>'+
           '<td style="text-align:left;font-weight:bold;">'+app.name+'</td>'+
           '<td>'+app.post+'</td>'+
-          '<td style="text-align:center;">'+fmtDate(app.appDate)+'</td>'+
+          '<td style="text-align:center;">'+app.appDate+'</td>'+
           '<td>'+app.reason+'</td>'+
           '<td style="text-align:center;font-weight:bold;color:#00695c;">'+fmt(app.amount)+'</td>'+
           '<td style="color:#b71c1c;font-weight:bold;">'+app.rejectedBy+'</td>'+
           '<td>'+app.rejectReason+'</td>'+
-          '<td style="text-align:center;">'+fmtDate(app.actionDate)+'</td>'+
+          '<td style="text-align:center;">'+app.actionDate+'</td>'+
           '<td style="background:#ffcdd2;color:#b71c1c;font-weight:bold;text-align:center;">&#10060; Rejected</td>';
         tr2.appendChild(tr);
       });
