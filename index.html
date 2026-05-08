@@ -1859,8 +1859,8 @@ window.feeFillPost = function(){
 
   <div style="background:#eceff1;border-left:4px solid #00695c;border-radius:4px;padding:10px 16px;margin-bottom:14px;font-size:12px;color:#37474f;">
     <strong style="color:#00695c;">Approval Workflow:</strong>
-    &nbsp; Step 1 — <strong>Principal</strong> reviews &amp; adds remark &rarr;
-    Step 2 — <strong>Accountant</strong> reviews &amp; adds remark &rarr;
+    &nbsp; Step 1 — <strong>Accountant</strong> reviews &amp; adds remark &rarr;
+    Step 2 — <strong>Principal</strong> reviews &amp; adds remark &rarr;
     Step 3 — <strong>Secretary, Hema Education Society</strong> gives final approval &rarr;
     Record moves to <strong>Advance Payment</strong> module automatically.
   </div>
@@ -2119,7 +2119,7 @@ window.feeFillPost = function(){
 
   <!-- STEP 1: PRINCIPAL APPROVAL -->
   <div class="sec-title" style="background:linear-gradient(90deg,#1565c0,#1976d2);">
-    Step 1 — Principal Approval
+    Step 1 — Accountant Review
     <span id="app-p1-count" style="background:#fff;color:#1565c0;border-radius:10px;padding:1px 10px;margin-left:8px;font-size:11px;">0 Pending</span>
   </div>
   <div class="table-wrap" style="margin-bottom:18px;">
@@ -2149,7 +2149,7 @@ window.feeFillPost = function(){
 
   <!-- STEP 2: ACCOUNTANT APPROVAL -->
   <div class="sec-title" style="background:linear-gradient(90deg,#6a1b9a,#7b1fa2);">
-    Step 2 — Accountant Approval
+    Step 2 — Principal Review
     <span id="app-p2-count" style="background:#fff;color:#6a1b9a;border-radius:10px;padding:1px 10px;margin-left:8px;font-size:11px;">0 Pending</span>
   </div>
   <div class="table-wrap" style="margin-bottom:18px;">
@@ -2296,17 +2296,16 @@ window.feeFillPost = function(){
       '<td style="text-align:center;">'+ed+'</td>';
   }
 
-  /* ---- Populate employee list ---- */
   window.applyInit = function(){
     try { APPS = JSON.parse(localStorage.getItem('hema_apps') || '[]'); } catch(e){ APPS=[]; }
-    populateEmpSelect('app-emp', function(){ appRenderAll(); });
+    var dateEl = document.getElementById('app-date');
+    if(dateEl && !dateEl.value) dateEl.value = today();
+    appRenderAll();
   };
 
   window.appFillPost = function(){
-    var selEl = document.getElementById('app-emp');
-    if(!selEl) return;
-    var v = selEl.value;
-    var nm = v.split('||')[0].trim();
+    var selEl = document.getElementById('app-emp'); if(!selEl) return;
+    var nm = selEl.value.split('||')[0].trim();
     var postEl = document.getElementById('app-post');
     if(postEl && typeof getPost==='function') postEl.value = getPost(nm);
     var selOpt = selEl.options[selEl.selectedIndex];
@@ -2319,7 +2318,7 @@ window.feeFillPost = function(){
       dojEl.style.color      = '#2e7d32';
       dojEl.style.fontWeight = 'bold';
     }
-  }
+  };
 
   window.appAutoCalc = function(){
     var amt = parseFloat(document.getElementById('app-amount').value)||0;
@@ -2328,7 +2327,7 @@ window.feeFillPost = function(){
     var emiEl = document.getElementById('app-emi');
     var endEl = document.getElementById('app-end');
     if(emiEl){
-      emiEl.value = (amt>0 && cnt>0) ? ('₹ ' + Math.ceil(amt/cnt).toLocaleString('en-IN')) : '';
+      emiEl.value = (amt>0 && cnt>0) ? ('\u20B9 ' + Math.ceil(amt/cnt).toLocaleString('en-IN')) : '';
       emiEl.style.background='#e3f2fd'; emiEl.style.border='2px solid #1565c0';
       emiEl.style.color='#1565c0'; emiEl.style.fontWeight='bold';
     }
@@ -2342,155 +2341,244 @@ window.feeFillPost = function(){
       endEl.style.background='#fff3e0'; endEl.style.border='2px solid #e65100';
       endEl.style.color='#e65100'; endEl.style.fontWeight='bold';
     }
-  }
+  };
 
   window.appToggleDoc = function(){
-    var reason = document.getElementById('app-reason') ? document.getElementById('app-reason').value : '';
-    var wrap  = document.getElementById('app-doc-wrap');
-    var label = document.getElementById('app-doc-label');
-    if(!wrap) return;
-    var docLabels={
-      'Medical Emergency':'Attach Medical Report / Prescription (Image / PDF)',
-      'Construction':'Attach Construction Estimate / Plan Document (Image / PDF)',
-      'Renovation':'Attach Renovation Quotation / Plan Document (Image / PDF)',
-      'Marriage':'Attach Marriage Card / Invitation (Image / PDF)',
-      'Child Marriage':'Attach Child Marriage Card / Invitation (Image / PDF)',
-      'Others':'Attach Supporting Document (Image / PDF)'
-    };
-    if(reason && reason !== '' && reason !== '-- Select Reason --'){
-      wrap.style.display='';
-      if(label) label.textContent = docLabels[reason]||'Attach Supporting Document (Image / PDF)';
-    } else {
-      wrap.style.display='none';
-      var dc=document.getElementById('app-doc'); if(dc) dc.value='';
-      var dp=document.getElementById('app-doc-preview'); if(dp) dp.innerHTML='';
-      window._appDocData=null; window._appDocName='';
-    }
-  }
+    var rs = document.getElementById('app-reason').value;
+    var dw = document.getElementById('app-doc-wrap');
+    if(dw) dw.style.display = (rs === 'Medical Emergency') ? '' : 'none';
+  };
 
-  window.appReadDoc = function(){
-    var inp=document.getElementById('app-doc');
-    if(!inp||!inp.files||!inp.files[0]) return;
-    var file=inp.files[0]; window._appDocName=file.name;
-    var reader=new FileReader();
-    reader.onload=function(e){
-      window._appDocData=e.target.result;
-      var prev=document.getElementById('app-doc-preview'); if(!prev) return;
-      if(file.type.indexOf('image')!==-1)
-        prev.innerHTML='<img src="'+e.target.result+'" style="max-height:70px;max-width:160px;border:1px solid #90a4ae;border-radius:4px;margin-top:4px;"/><br><span style="font-size:10px;color:#555;">'+file.name+'</span>';
-      else
-        prev.innerHTML='<div style="margin-top:4px;padding:5px 10px;background:#e3f2fd;border-radius:4px;font-size:11px;color:#1565c0;">'+file.name+' attached</div>';
+  window.appDocPreview = function(){
+    var dc = document.getElementById('app-doc');
+    var dp = document.getElementById('app-doc-preview');
+    if(!dc || !dc.files || !dc.files[0]) return;
+    var file = dc.files[0];
+    window._appDocName = file.name;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      window._appDocData = e.target.result;
+      if(dp){
+        if(file.type.indexOf('image')===0)
+          dp.innerHTML = '<img src="'+e.target.result+'" style="max-height:60px;max-width:90px;border:1px solid #90a4ae;border-radius:3px;margin-top:4px;">';
+        else
+          dp.innerHTML = '<span style="font-size:11px;color:#1565c0;font-weight:bold;">'+file.name+'</span>';
+      }
     };
     reader.readAsDataURL(file);
   };
 
+  /* ============ SUBMIT ============ */
   window.appSubmit = function(){
-    var ev=document.getElementById('app-emp').value;
-    var amt=parseFloat(document.getElementById('app-amount').value)||0;
-    var cnt=parseInt(document.getElementById('app-count').value)||0;
-    var sv=document.getElementById('app-start').value;
-    var rs=document.getElementById('app-reason').value;
-    if(!ev)  {alert('Please select an employee.'); return;}
-    if(amt<=0){alert('Please enter a valid advance amount.'); return;}
-    if(cnt<=0){alert('Please enter number of repayment months.'); return;}
-    if(!sv)  {alert('Please select a proposed start month.'); return;}
-    if(!rs)  {alert('Please select the purpose/reason.'); return;}
-    var parts=ev.split('||');
+    var ev  = document.getElementById('app-emp').value;
+    var amt = parseFloat(document.getElementById('app-amount').value)||0;
+    var cnt = parseInt(document.getElementById('app-count').value)||0;
+    var sv  = document.getElementById('app-start').value;
+    var rs  = document.getElementById('app-reason').value;
+    if(!ev)   { alert('Please select an employee.'); return; }
+    if(amt<=0){ alert('Please enter a valid advance amount.'); return; }
+    if(cnt<=0){ alert('Please enter number of repayment months.'); return; }
+    if(!sv)   { alert('Please select a proposed start month.'); return; }
+    if(!rs)   { alert('Please select the purpose/reason.'); return; }
+    var parts = ev.split('||');
     APPS.push({
-      id:Date.now(), name:parts[0], post:document.getElementById('app-post').value||getPost(parts[0])||'',
-      appDate:document.getElementById('app-date').value||today(),
-      reason:rs, remarks:document.getElementById('app-remarks').value.trim()||'-',
-      amount:amt, count:cnt, emi:Math.ceil(amt/cnt),
-      start:sv, end:document.getElementById('app-end').value,
-      status:'pending_principal',
-      principalRemark:'', accountantRemark:'', secretaryRemark:'',
-      actionDate:'', rejectedBy:'', rejectReason:'',
-      docData:window._appDocData||null, docName:window._appDocName||''
+      id: Date.now(),
+      name: parts[0].trim(),
+      post: document.getElementById('app-post').value || (typeof getPost==='function' ? getPost(parts[0].trim()) : '') || '',
+      appDate: document.getElementById('app-date').value || today(),
+      reason: rs,
+      remarks: document.getElementById('app-remarks').value.trim() || '-',
+      amount: amt, count: cnt, emi: Math.ceil(amt/cnt),
+      start: sv, end: document.getElementById('app-end').value,
+      status: 'pending_accountant',
+      accountantRemark: '', principalRemark: '', secretaryRemark: '',
+      actionDate: '', rejectedBy: '', rejectReason: '',
+      docData: window._appDocData || null,
+      docName: window._appDocName || ''
     });
-    persist(); appRenderAll(); appClearForm();
-    alert('Application submitted. Awaiting Principal approval.');
+    persist();
+    appRenderAll();
+    appClearForm();
+    alert('Application submitted! Now pending Accountant review (Step 1).');
   };
 
   window.appClearForm = function(){
-    ['app-amount','app-count','app-emi','app-start','app-end','app-date','app-remarks','app-post'].forEach(function(id){ var el=document.getElementById(id);if(el)el.value=''; });
-    document.getElementById('app-emp').value='';
-    document.getElementById('app-reason').value='';
-    var dw=document.getElementById('app-doc-wrap'); if(dw) dw.style.display='none';
-    var dc=document.getElementById('app-doc'); if(dc) dc.value='';
-    var dp=document.getElementById('app-doc-preview'); if(dp) dp.innerHTML='';
-    window._appDocData=null; window._appDocName='';
+    ['app-amount','app-count','app-emi','app-start','app-end','app-remarks','app-post'].forEach(function(id){
+      var el = document.getElementById(id); if(el) el.value = '';
+    });
+    var empEl = document.getElementById('app-emp'); if(empEl) empEl.value = '';
+    var rsEl  = document.getElementById('app-reason'); if(rsEl) rsEl.value = '';
+    var dateEl = document.getElementById('app-date'); if(dateEl) dateEl.value = today();
+    var dw = document.getElementById('app-doc-wrap'); if(dw) dw.style.display = 'none';
+    var dc = document.getElementById('app-doc'); if(dc) dc.value = '';
+    var dp = document.getElementById('app-doc-preview'); if(dp) dp.innerHTML = '';
+    window._appDocData = null; window._appDocName = '';
   };
 
-  /* ---- PRINCIPAL APPROVE ---- */
-  window.appP1Approve = function(i){
-    var app=APPS[i]; if(!app) return;
-    var remark=prompt('Principal Remark for '+app.name+' (Rs.'+fmt(app.amount)+'):');
-    if(remark===null) return;
-    app.principalRemark=remark.trim()||'Approved';
-    app.status='pending_accountant';
+  /* ============ STEP 1: ACCOUNTANT ============ */
+  window.appP1ApproveInline = function(ri){
+    var app = APPS[ri]; if(!app) return;
+    var rEl = document.getElementById('p1r_'+ri);
+    var remark = rEl ? rEl.value.trim() : '';
+    if(!remark){ alert('Please enter Accountant remark before forwarding.'); return; }
+    app.accountantRemark = remark;
+    app.status = 'pending_principal';
+    app.actionDate = today();
     persist(); appRenderAll();
-    alert('Forwarded to Accountant for review.');
-  };
-  window.appP1Reject = function(i){
-    var app=APPS[i]; if(!app) return;
-    var r=prompt('Rejection reason (Principal):'); if(r===null) return;
-    app.status='rejected'; app.rejectedBy='Principal';
-    app.actionDate=today(); app.rejectReason=r.trim()||'Not specified';
-    persist(); appRenderAll();
+    alert('Step 1 Complete: Forwarded to Principal for review.');
   };
 
-  /* ---- ACCOUNTANT APPROVE ---- */
-  window.appP2Approve = function(i){
-    var app=APPS[i]; if(!app) return;
-    var remark=prompt('Accountant Remark for '+app.name+' (Rs.'+fmt(app.amount)+'):');
-    if(remark===null) return;
-    app.accountantRemark=remark.trim()||'Approved';
-    app.status='pending_secretary';
-    persist(); appRenderAll();
-    alert('Forwarded to Secretary, Hema Education Society for final approval.');
-  };
-  window.appP2Reject = function(i){
-    var app=APPS[i]; if(!app) return;
-    var r=prompt('Rejection reason (Accountant):'); if(r===null) return;
-    app.status='rejected'; app.rejectedBy='Accountant';
-    app.actionDate=today(); app.rejectReason=r.trim()||'Not specified';
+  window.appP1Reject = function(ri){
+    var app = APPS[ri]; if(!app) return;
+    var r = prompt('Rejection reason (Accountant):'); if(r===null) return;
+    app.status = 'rejected'; app.rejectedBy = 'Accountant';
+    app.actionDate = today(); app.rejectReason = r.trim() || 'Not specified';
     persist(); appRenderAll();
   };
 
-  /* ---- SECRETARY FINAL APPROVE ---- */
-  window.appP3Approve = function(i){
-    var app=APPS[i]; if(!app) return;
-    var remark=prompt('Secretary Remark for '+app.name+' (Rs.'+fmt(app.amount)+') — Final Approval:');
-    if(remark===null) return;
-    app.secretaryRemark=remark.trim()||'Approved';
-    app.status='approved'; app.actionDate=today();
-    // AUTO-PUSH to Advance Payment
-    var AR=[]; try{ AR=JSON.parse(localStorage.getItem('hema_adv')||'[]'); }catch(e){ AR=[]; }
-    AR.push({ id:Date.now(), name:app.name, post:app.post, dg:app.actionDate,
-      rs:app.reason, mode:'', txnid:'-', paydate:'',
-      tot:app.amount, cnt:app.count, emi:app.emi, st:app.start, en:app.end, pd:0, docName:app.docName||'' });
-    try{ localStorage.setItem('hema_adv',JSON.stringify(AR)); }catch(e){}
-    if(typeof advRenderTable==='function') advRenderTable();
-    if(typeof advInit==='function') advInit();
+  /* ============ STEP 2: PRINCIPAL ============ */
+  window.appP2ApproveInline = function(ri){
+    var app = APPS[ri]; if(!app) return;
+    var rEl = document.getElementById('p2r_'+ri);
+    var remark = rEl ? rEl.value.trim() : '';
+    if(!remark){ alert('Please enter Principal remark before forwarding.'); return; }
+    app.principalRemark = remark;
+    app.status = 'pending_secretary';
+    app.actionDate = today();
     persist(); appRenderAll();
-    alert('FINAL APPROVAL GRANTED.
-
-'+app.name+''s advance of Rs.'+fmt(app.amount)+' has been added to the Advance Payment module.');
+    alert('Step 2 Complete: Forwarded to Secretary for final approval.');
   };
-  window.appP3Reject = function(i){
-    var app=APPS[i]; if(!app) return;
-    var r=prompt('Rejection reason (Secretary):'); if(r===null) return;
-    app.status='rejected'; app.rejectedBy='Secretary';
-    app.actionDate=today(); app.rejectReason=r.trim()||'Not specified';
+
+  window.appP2Reject = function(ri){
+    var app = APPS[ri]; if(!app) return;
+    var r = prompt('Rejection reason (Principal):'); if(r===null) return;
+    app.status = 'rejected'; app.rejectedBy = 'Principal';
+    app.actionDate = today(); app.rejectReason = r.trim() || 'Not specified';
     persist(); appRenderAll();
   };
 
-  /* ---- RENDER ALL TABLES ---- */
-  window.appRenderAll = function appRenderAll(){
+  /* ============ STEP 3: SECRETARY FINAL ============ */
+  window.appP3ApproveInline = function(ri){
+    var app = APPS[ri]; if(!app) return;
+    var rEl = document.getElementById('p3r_'+ri);
+    var remark = rEl ? rEl.value.trim() : '';
+    if(!remark){ alert('Please enter Secretary remark before final approval.'); return; }
+    app.secretaryRemark = remark;
+    app.status = 'approved';
+    app.actionDate = today();
+    var AR = [];
+    try{ AR = JSON.parse(localStorage.getItem('hema_adv') || '[]'); } catch(e){ AR = []; }
+    AR.push({
+      id: Date.now(), name: app.name, post: app.post, dg: app.actionDate,
+      rs: app.reason, mode: '', txnid: '-', paydate: '',
+      tot: app.amount, cnt: app.count, emi: app.emi,
+      st: app.start, en: app.end, pd: 0, docName: app.docName || ''
+    });
+    try{ localStorage.setItem('hema_adv', JSON.stringify(AR)); } catch(e){}
+    if(typeof advRenderTable === 'function') advRenderTable();
+    if(typeof advInit === 'function') advInit();
+    persist(); appRenderAll();
+    appGenerateApprovalPDF(app);
+    alert('FINAL APPROVAL GRANTED! Approval letter generated.');
+  };
+
+  window.appP3Reject = function(ri){
+    var app = APPS[ri]; if(!app) return;
+    var r = prompt('Rejection reason (Secretary):'); if(r===null) return;
+    app.status = 'rejected'; app.rejectedBy = 'Secretary';
+    app.actionDate = today(); app.rejectReason = r.trim() || 'Not specified';
+    persist(); appRenderAll();
+  };
+
+  /* ============ PDF APPROVAL LETTER ============ */
+  window.appGenerateApprovalPDF = function(app){
+    var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function fmtMon(v){ if(!v) return '-'; var p=v.split('-'); return mn[parseInt(p[1])-1]+'-'+p[0]; }
+    function fmtAmt(n){ return '\u20B9 '+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0}); }
+    var schedRows = '';
+    if(app.start && app.count){
+      var p=app.start.split('-'), y=parseInt(p[0]), m2=parseInt(p[1]);
+      for(var i=0;i<app.count;i++){
+        var cm=m2+i, cy=y+Math.floor((cm-1)/12); cm=((cm-1)%12)+1;
+        schedRows += '<tr><td style="padding:5px 8px;border:1px solid #ccc;text-align:center;">'+(i+1)+'</td>'+
+          '<td style="padding:5px 8px;border:1px solid #ccc;text-align:center;">'+mn[cm-1]+'-'+cy+'</td>'+
+          '<td style="padding:5px 8px;border:1px solid #ccc;text-align:center;font-weight:bold;color:#1565c0;">'+fmtAmt(app.emi)+'</td>'+
+          '<td style="padding:5px 8px;border:1px solid #ccc;text-align:center;color:#e65100;">Pending</td></tr>';
+      }
+    }
+    var refNo = 'HES/ADV/'+app.actionDate.replace(/-/g,'/')+'/'+(Math.floor(Math.random()*9000)+1000);
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Advance Approval - '+app.name+'</title>'+
+      '<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#222;}'+
+      '.page{width:210mm;min-height:297mm;margin:0 auto;padding:16mm 14mm;box-sizing:border-box;}'+
+      '.hdr{text-align:center;border-bottom:3px double #1a237e;padding-bottom:10px;margin-bottom:16px;}'+
+      '.org{font-size:19px;font-weight:bold;color:#1a237e;letter-spacing:1px;}'+
+      '.tbox{background:#1565c0;color:#fff;text-align:center;padding:9px;border-radius:4px;font-size:14px;font-weight:bold;margin-bottom:14px;}'+
+      '.ref{display:flex;justify-content:space-between;font-size:11px;color:#444;margin-bottom:12px;}'+
+      'table.det{width:100%;border-collapse:collapse;margin-bottom:14px;}'+
+      'table.det td,table.det th{border:1px solid #bbb;padding:6px 10px;font-size:12px;}'+
+      'table.det th{background:#e3f2fd;color:#1a237e;font-weight:bold;width:38%;}'+
+      '.et{width:100%;border-collapse:collapse;margin-bottom:14px;}'+
+      '.et th{background:#1565c0;color:#fff;padding:6px;font-size:11px;border:1px solid #90a4ae;}'+
+      '.et td{font-size:11px;border:1px solid #ccc;}'+
+      '.et tr:nth-child(even) td{background:#f5f5f5;}'+
+      '.abox{border:1px solid #c8e6c9;border-radius:4px;padding:12px;margin-bottom:14px;background:#f9fbe7;}'+
+      '.s1{background:#e3f2fd;border-left:4px solid #1565c0;padding:8px;margin-bottom:6px;border-radius:3px;font-size:11px;}'+
+      '.s2{background:#f3e5f5;border-left:4px solid #6a1b9a;padding:8px;margin-bottom:6px;border-radius:3px;font-size:11px;}'+
+      '.s3{background:#e8f5e9;border-left:4px solid #2e7d32;padding:8px;border-radius:3px;font-size:11px;}'+
+      '.sigs{display:flex;justify-content:space-between;margin-top:40px;}'+
+      '.sb{text-align:center;width:28%;}'+
+      '.sl{border-top:1px solid #333;margin-bottom:4px;}'+
+      '.sn{font-size:11px;font-weight:bold;color:#1a237e;}'+
+      '.st{font-size:10px;color:#555;}'+
+      '.seal{display:inline-block;border:3px double #1a237e;border-radius:50%;width:72px;height:72px;line-height:72px;text-align:center;font-size:9px;font-weight:bold;color:#1a237e;}'+
+      '@media print{.noprint{display:none;}}'+
+      '</style></head><body>'+
+      '<div class="noprint" style="text-align:center;padding:10px;background:#1565c0;">'+
+        '<button onclick="window.print()" style="background:#fff;color:#1565c0;border:none;border-radius:4px;padding:9px 28px;font-size:13px;font-weight:bold;cursor:pointer;margin-right:8px;">Print / Save as PDF</button>'+
+        '<button onclick="window.close()" style="background:#b71c1c;color:#fff;border:none;border-radius:4px;padding:9px 18px;font-size:13px;cursor:pointer;">Close</button>'+
+      '</div>'+
+      '<div class="page">'+
+        '<div class="hdr"><div class="org">HEMA EDUCATION SOCIETY, BHOPAL</div><div style="font-size:11px;color:#555;margin-top:3px;">Advance Salary Approval Letter</div></div>'+
+        '<div class="tbox">ADVANCE SALARY APPROVAL LETTER</div>'+
+        '<div class="ref"><span><strong>Ref No:</strong> '+refNo+'</span><span><strong>Date:</strong> '+app.actionDate+'</span></div>'+
+        '<table class="det">'+
+          '<tr><th>Employee Name</th><td style="font-weight:bold;color:#1a237e;">'+app.name+'</td></tr>'+
+          '<tr><th>Designation / Post</th><td>'+app.post+'</td></tr>'+
+          '<tr><th>Date of Application</th><td>'+app.appDate+'</td></tr>'+
+          '<tr><th>Reason / Purpose</th><td>'+app.reason+'</td></tr>'+
+          '<tr><th>Total Advance Amount</th><td style="font-weight:bold;color:#00695c;font-size:14px;">'+fmtAmt(app.amount)+'</td></tr>'+
+          '<tr><th>Repayment Months</th><td>'+app.count+' months</td></tr>'+
+          '<tr><th>Monthly EMI</th><td style="font-weight:bold;color:#1565c0;">'+fmtAmt(app.emi)+' per month</td></tr>'+
+          '<tr><th>Repayment Start</th><td>'+fmtMon(app.start)+'</td></tr>'+
+          '<tr><th>Repayment End</th><td>'+fmtMon(app.end)+'</td></tr>'+
+          '<tr><th>Approval Date</th><td style="font-weight:bold;color:#2e7d32;">'+app.actionDate+'</td></tr>'+
+        '</table>'+
+        '<div style="font-size:12px;font-weight:bold;color:#1a237e;margin-bottom:6px;">EMI Repayment Schedule</div>'+
+        '<table class="et"><thead><tr><th style="width:40px;">Sr.</th><th>Month</th><th>EMI Amount</th><th>Status</th></tr></thead><tbody>'+schedRows+'</tbody></table>'+
+        '<div style="font-size:12px;font-weight:bold;color:#1a237e;margin-bottom:8px;">Approval Trail</div>'+
+        '<div class="abox">'+
+          '<div class="s1"><strong>Step 1 - Accountant:</strong> '+app.accountantRemark+'</div>'+
+          '<div class="s2"><strong>Step 2 - Principal:</strong> '+app.principalRemark+'</div>'+
+          '<div class="s3"><strong>Step 3 - Secretary (Final):</strong> '+app.secretaryRemark+'</div>'+
+        '</div>'+
+        '<div class="sigs">'+
+          '<div class="sb"><div class="sl"></div><div class="sn">Accountant</div><div class="st">Hema Education Society</div></div>'+
+          '<div class="sb"><div class="sl"></div><div class="sn">Principal</div><div class="st">Hema Education Society</div></div>'+
+          '<div class="sb"><div class="sl"></div><div class="sn">Secretary</div><div class="st">Hema Education Society, Bhopal</div></div>'+
+        '</div>'+
+        '<div style="text-align:center;margin-top:14px;"><div class="seal">OFFICE SEAL</div></div>'+
+      '</div></body></html>';
+    var win = window.open('', '_blank', 'width=900,height=700');
+    if(win){ win.document.write(html); win.document.close(); }
+    else { alert('Please allow pop-ups to view the approval letter.'); }
+  };
+
+  /* ============ RENDER ALL ============ */
+  window.appRenderAll = function(){
     var p1=[],p2=[],p3=[],done=[],rej=[];
-    APPS.forEach(function(a){ 
-      if(a.status==='pending_principal')  p1.push(a);
-      else if(a.status==='pending_accountant') p2.push(a);
+    APPS.forEach(function(a){
+      if(a.status==='pending_accountant')   p1.push(a);
+      else if(a.status==='pending_principal')  p2.push(a);
       else if(a.status==='pending_secretary')  p3.push(a);
       else if(a.status==='approved')  done.push(a);
       else if(a.status==='rejected')  rej.push(a);
@@ -2500,130 +2588,116 @@ window.feeFillPost = function(){
     sv('app-p2-count', p2.length+' Pending');
     sv('app-p3-count', p3.length+' Pending');
     sv('app-done-count', done.length);
-    sv('app-rej-count', rej.length);
+    sv('app-rej-count',  rej.length);
 
-    function empty(tb, cols, msg){ tb.innerHTML='<tr><td colspan="'+cols+'" style="text-align:center;padding:14px;color:#888;font-style:italic;">'+msg+'</td></tr>'; }
+    function emptyRow(tb, cols, msg){
+      tb.innerHTML='<tr><td colspan="'+cols+'" style="text-align:center;padding:14px;color:#888;font-style:italic;">'+msg+'</td></tr>';
+    }
 
-    // Step 1 - Principal
+    /* Step 1 - Accountant */
     var t1=document.getElementById('app-p1-tb'); if(!t1) return;
-    if(!p1.length){ empty(t1,15,'No applications pending Principal approval'); }
-    else { t1.innerHTML=''; p1.forEach(function(app){
-      var ri=APPS.indexOf(app); var tr=document.createElement('tr'); tr.style.background='#e3f2fd';
-      tr.innerHTML=rowBase(app,p1.indexOf(app))+
-        '<td style="font-size:10px;color:#555;">'+app.remarks+'</td>'+
-        '<td style="text-align:center;">'+docCell(app)+'</td>'+
-        '<td><input type="text" placeholder="Enter remark before approving..." id="p1r_'+ri+'" style="width:100%;padding:4px;border:1px solid #90a4ae;border-radius:3px;font-size:11px;"></td>'+
-        '<td style="text-align:center;"><button onclick="appP1ApproveInline('+ri+')" style="background:#1565c0;color:#fff;border:none;border-radius:3px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">Approve</button></td>'+
-        '<td style="text-align:center;"><button onclick="appP1Reject('+ri+')" style="background:#b71c1c;color:#fff;border:none;border-radius:3px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">Reject</button></td>';
-      t1.appendChild(tr);
-    }); }
+    if(!p1.length){ emptyRow(t1,15,'No applications pending Accountant review'); }
+    else {
+      t1.innerHTML='';
+      p1.forEach(function(app){
+        var ri=APPS.indexOf(app);
+        var tr=document.createElement('tr'); tr.style.background='#e3f2fd';
+        tr.innerHTML=rowBase(app,p1.indexOf(app))+
+          '<td style="font-size:10px;color:#555;">'+app.remarks+'</td>'+
+          '<td style="text-align:center;">'+docCell(app)+'</td>'+
+          '<td><input type="text" placeholder="Accountant remark..." id="p1r_'+ri+'" style="width:100%;padding:4px;border:1px solid #90a4ae;border-radius:3px;font-size:11px;"></td>'+
+          '<td style="text-align:center;"><button onclick="appP1ApproveInline('+ri+')" style="background:#1565c0;color:#fff;border:none;border-radius:3px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">&#10003; Reviewed &amp; Forwarded</button></td>'+
+          '<td style="text-align:center;"><button onclick="appP1Reject('+ri+')" style="background:#b71c1c;color:#fff;border:none;border-radius:3px;padding:5px 8px;font-size:11px;cursor:pointer;">Reject</button></td>';
+        t1.appendChild(tr);
+      });
+    }
 
-    // Step 2 - Accountant
+    /* Step 2 - Principal */
     var t2=document.getElementById('app-p2-tb'); if(!t2) return;
-    if(!p2.length){ empty(t2,15,'No applications pending Accountant approval'); }
-    else { t2.innerHTML=''; p2.forEach(function(app){
-      var ri=APPS.indexOf(app); var tr=document.createElement('tr'); tr.style.background='#f3e5f5';
-      tr.innerHTML=rowBase(app,p2.indexOf(app))+
-        '<td style="font-size:11px;color:#4a148c;font-weight:bold;padding:4px 6px;">'+app.principalRemark+'</td>'+
-        '<td style="text-align:center;">'+docCell(app)+'</td>'+
-        '<td><input type="text" placeholder="Enter remark before approving..." id="p2r_'+ri+'" style="width:100%;padding:4px;border:1px solid #90a4ae;border-radius:3px;font-size:11px;"></td>'+
-        '<td style="text-align:center;"><button onclick="appP2ApproveInline('+ri+')" style="background:#6a1b9a;color:#fff;border:none;border-radius:3px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">Approve</button></td>'+
-        '<td style="text-align:center;"><button onclick="appP2Reject('+ri+')" style="background:#b71c1c;color:#fff;border:none;border-radius:3px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">Reject</button></td>';
-      t2.appendChild(tr);
-    }); }
+    if(!p2.length){ emptyRow(t2,15,'No applications pending Principal review'); }
+    else {
+      t2.innerHTML='';
+      p2.forEach(function(app){
+        var ri=APPS.indexOf(app);
+        var tr=document.createElement('tr'); tr.style.background='#f3e5f5';
+        tr.innerHTML=rowBase(app,p2.indexOf(app))+
+          '<td style="font-size:11px;color:#4a148c;font-weight:bold;padding:4px 6px;">Acc: '+app.accountantRemark+'</td>'+
+          '<td style="text-align:center;">'+docCell(app)+'</td>'+
+          '<td><input type="text" placeholder="Principal remark..." id="p2r_'+ri+'" style="width:100%;padding:4px;border:1px solid #90a4ae;border-radius:3px;font-size:11px;"></td>'+
+          '<td style="text-align:center;"><button onclick="appP2ApproveInline('+ri+')" style="background:#6a1b9a;color:#fff;border:none;border-radius:3px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">&#10003; Reviewed &amp; Forwarded</button></td>'+
+          '<td style="text-align:center;"><button onclick="appP2Reject('+ri+')" style="background:#b71c1c;color:#fff;border:none;border-radius:3px;padding:5px 8px;font-size:11px;cursor:pointer;">Reject</button></td>';
+        t2.appendChild(tr);
+      });
+    }
 
-    // Step 3 - Secretary
+    /* Step 3 - Secretary */
     var t3=document.getElementById('app-p3-tb'); if(!t3) return;
-    if(!p3.length){ empty(t3,16,'No applications pending Secretary approval'); }
-    else { t3.innerHTML=''; p3.forEach(function(app){
-      var ri=APPS.indexOf(app); var tr=document.createElement('tr'); tr.style.background='#e8f5e9';
-      tr.innerHTML=rowBase(app,p3.indexOf(app))+
-        '<td style="font-size:11px;color:#1565c0;font-weight:bold;padding:4px 6px;">'+app.principalRemark+'</td>'+
-        '<td style="font-size:11px;color:#6a1b9a;font-weight:bold;padding:4px 6px;">'+app.accountantRemark+'</td>'+
-        '<td style="text-align:center;">'+docCell(app)+'</td>'+
-        '<td><input type="text" placeholder="Secretary remark..." id="p3r_'+ri+'" style="width:100%;padding:4px;border:1px solid #90a4ae;border-radius:3px;font-size:11px;"></td>'+
-        '<td style="text-align:center;"><button onclick="appP3ApproveInline('+ri+')" style="background:#2e7d32;color:#fff;border:none;border-radius:3px;padding:5px 12px;font-size:11px;font-weight:bold;cursor:pointer;">Final Approve</button></td>'+
-        '<td style="text-align:center;"><button onclick="appP3Reject('+ri+')" style="background:#b71c1c;color:#fff;border:none;border-radius:3px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">Reject</button></td>';
-      t3.appendChild(tr);
-    }); }
+    if(!p3.length){ emptyRow(t3,16,'No applications pending Secretary final approval'); }
+    else {
+      t3.innerHTML='';
+      p3.forEach(function(app){
+        var ri=APPS.indexOf(app);
+        var tr=document.createElement('tr'); tr.style.background='#e8f5e9';
+        tr.innerHTML=rowBase(app,p3.indexOf(app))+
+          '<td style="font-size:10px;color:#1565c0;">Acc: '+app.accountantRemark+'</td>'+
+          '<td style="font-size:10px;color:#6a1b9a;">Prin: '+app.principalRemark+'</td>'+
+          '<td style="text-align:center;">'+docCell(app)+'</td>'+
+          '<td><input type="text" placeholder="Secretary remark..." id="p3r_'+ri+'" style="width:100%;padding:4px;border:1px solid #90a4ae;border-radius:3px;font-size:11px;"></td>'+
+          '<td style="text-align:center;"><button onclick="appP3ApproveInline('+ri+')" style="background:#2e7d32;color:#fff;border:none;border-radius:3px;padding:5px 12px;font-size:11px;font-weight:bold;cursor:pointer;">&#9989; Final Approve</button></td>'+
+          '<td style="text-align:center;"><button onclick="appP3Reject('+ri+')" style="background:#b71c1c;color:#fff;border:none;border-radius:3px;padding:5px 8px;font-size:11px;cursor:pointer;">Reject</button></td>';
+        t3.appendChild(tr);
+      });
+    }
 
-    // Fully Approved
+    /* Approved */
     var td=document.getElementById('app-done-tb'); if(!td) return;
-    if(!done.length){ empty(td,13,'No fully approved applications yet'); }
-    else { td.innerHTML=''; done.forEach(function(app,ai){
-      var sd=app.start?app.start.replace(/(\d{4})-(\d{2})/,'$2/$1'):'';
-      var ed=app.end?app.end.replace(/(\d{4})-(\d{2})/,'$2/$1'):'';
-      var tr=document.createElement('tr'); tr.style.background='#f1f8e9';
-      tr.innerHTML='<td class="sno-col">'+(ai+1)+'</td>'+
-        '<td class="name-col" style="text-align:left;font-weight:bold;">'+app.name+'</td>'+
-        '<td class="post-col">'+app.post+'</td>'+
-        '<td style="text-align:center;">'+app.appDate+'</td>'+
-        '<td>'+app.reason+'</td>'+
-        '<td style="background:#e0f2f1;font-weight:bold;color:#00695c;text-align:center;">'+fmt(app.amount)+'</td>'+
-        '<td style="text-align:center;">'+app.count+'</td>'+
-        '<td style="text-align:center;font-weight:bold;color:#2e7d32;">'+fmt(app.emi)+'</td>'+
-        '<td style="font-size:10px;color:#1565c0;">'+app.principalRemark+'</td>'+
-        '<td style="font-size:10px;color:#6a1b9a;">'+app.accountantRemark+'</td>'+
-        '<td style="font-size:10px;color:#2e7d32;">'+app.secretaryRemark+'</td>'+
-        '<td style="text-align:center;font-weight:bold;color:#2e7d32;">'+app.actionDate+'</td>'+
-        '<td style="background:#c8e6c9;color:#1b5e20;font-weight:bold;text-align:center;">Approved — In Advance</td>';
-      td.appendChild(tr);
-    }); }
+    if(!done.length){ emptyRow(td,13,'No fully approved applications yet'); }
+    else {
+      td.innerHTML='';
+      done.forEach(function(app,ai){
+        var sd=app.start?app.start.replace(/(\d{4})-(\d{2})/,'$2/$1'):'';
+        var ed=app.end?app.end.replace(/(\d{4})-(\d{2})/,'$2/$1'):'';
+        var tr=document.createElement('tr'); tr.style.background='#f1f8e9';
+        tr.innerHTML='<td style="text-align:center;">'+(ai+1)+'</td>'+
+          '<td style="text-align:left;font-weight:bold;">'+app.name+'</td>'+
+          '<td>'+app.post+'</td>'+
+          '<td style="text-align:center;">'+app.appDate+'</td>'+
+          '<td>'+app.reason+'</td>'+
+          '<td style="background:#e0f2f1;font-weight:bold;color:#00695c;text-align:center;">'+fmt(app.amount)+'</td>'+
+          '<td style="text-align:center;">'+app.count+'</td>'+
+          '<td style="text-align:center;font-weight:bold;color:#2e7d32;">'+fmt(app.emi)+'</td>'+
+          '<td style="font-size:10px;color:#1565c0;">'+app.accountantRemark+'</td>'+
+          '<td style="font-size:10px;color:#6a1b9a;">'+app.principalRemark+'</td>'+
+          '<td style="font-size:10px;color:#2e7d32;">'+app.secretaryRemark+'</td>'+
+          '<td style="text-align:center;font-weight:bold;color:#2e7d32;">'+app.actionDate+'</td>'+
+          '<td style="background:#c8e6c9;color:#1b5e20;font-weight:bold;text-align:center;">&#9989; Approved</td>';
+        td.appendChild(tr);
+      });
+    }
 
-    // Rejected
+    /* Rejected */
     var tr2=document.getElementById('app-rej-tb'); if(!tr2) return;
-    if(!rej.length){ empty(tr2,10,'No rejected applications'); }
-    else { tr2.innerHTML=''; rej.forEach(function(app,ri){
-      var tr=document.createElement('tr'); tr.style.background='#ffebee';
-      tr.innerHTML='<td class="sno-col">'+(ri+1)+'</td>'+
-        '<td class="name-col" style="text-align:left;font-weight:bold;">'+app.name+'</td>'+
-        '<td class="post-col">'+app.post+'</td>'+
-        '<td style="text-align:center;">'+app.appDate+'</td>'+
-        '<td>'+app.reason+'</td>'+
-        '<td style="background:#ffebee;font-weight:bold;color:#b71c1c;text-align:center;">'+fmt(app.amount)+'</td>'+
-        '<td style="text-align:center;font-weight:bold;color:#b71c1c;">'+app.rejectedBy+'</td>'+
-        '<td style="text-align:center;">'+app.actionDate+'</td>'+
-        '<td style="font-style:italic;color:#c62828;">'+app.rejectReason+'</td>'+
-        '<td style="background:#ffcdd2;color:#b71c1c;font-weight:bold;text-align:center;">Rejected</td>';
-      tr2.appendChild(tr);
-    }); }
-  }
-
-  /* Inline approve with remark field in table */
-  window.appP1ApproveInline = function(i){
-    var app=APPS[i]; if(!app) return;
-    var r=document.getElementById('p1r_'+i); var remark=r?r.value.trim():'';
-    if(!remark){ alert('Please enter Principal remark before approving.'); return; }
-    app.principalRemark=remark; app.status='pending_accountant';
-    persist(); appRenderAll();
-    alert('Forwarded to Accountant.');
-  };
-  window.appP2ApproveInline = function(i){
-    var app=APPS[i]; if(!app) return;
-    var r=document.getElementById('p2r_'+i); var remark=r?r.value.trim():'';
-    if(!remark){ alert('Please enter Accountant remark before approving.'); return; }
-    app.accountantRemark=remark; app.status='pending_secretary';
-    persist(); appRenderAll();
-    alert('Forwarded to Secretary, Hema Education Society.');
-  };
-  window.appP3ApproveInline = function(i){
-    var app=APPS[i]; if(!app) return;
-    var r=document.getElementById('p3r_'+i); var remark=r?r.value.trim():'';
-    if(!remark){ alert('Please enter Secretary remark before final approval.'); return; }
-    app.secretaryRemark=remark; app.status='approved'; app.actionDate=today();
-    var AR=[]; try{ AR=JSON.parse(localStorage.getItem('hema_adv')||'[]'); }catch(e){ AR=[]; }
-    AR.push({ id:Date.now(), name:app.name, post:app.post, dg:app.actionDate,
-      rs:app.reason, mode:'', txnid:'-', paydate:'',
-      tot:app.amount, cnt:app.count, emi:app.emi, st:app.start, en:app.end, pd:0 });
-    try{ localStorage.setItem('hema_adv',JSON.stringify(AR)); }catch(e){}
-    if(typeof advInit==='function') advInit();
-    persist(); appRenderAll();
-    alert('FINAL APPROVAL GRANTED.
-'+app.name+''s advance of Rs.'+fmt(app.amount)+' has been added to the Advance Payment module.');
+    if(!rej.length){ emptyRow(tr2,10,'No rejected applications'); }
+    else {
+      tr2.innerHTML='';
+      rej.forEach(function(app,ai){
+        var tr=document.createElement('tr'); tr.style.background='#ffebee';
+        tr.innerHTML='<td style="text-align:center;">'+(ai+1)+'</td>'+
+          '<td style="text-align:left;font-weight:bold;">'+app.name+'</td>'+
+          '<td>'+app.post+'</td>'+
+          '<td style="text-align:center;">'+app.appDate+'</td>'+
+          '<td>'+app.reason+'</td>'+
+          '<td style="text-align:center;font-weight:bold;color:#00695c;">'+fmt(app.amount)+'</td>'+
+          '<td style="color:#b71c1c;font-weight:bold;">'+app.rejectedBy+'</td>'+
+          '<td>'+app.rejectReason+'</td>'+
+          '<td style="text-align:center;">'+app.actionDate+'</td>'+
+          '<td style="background:#ffcdd2;color:#b71c1c;font-weight:bold;text-align:center;">&#10060; Rejected</td>';
+        tr2.appendChild(tr);
+      });
+    }
   };
 
-
-  // Retry loop — populate app-emp as soon as populateEmpSelect is ready
+  /* Retry loop */
   (function retryAppEmp(){
     if(typeof populateEmpSelect === 'function'){
       populateEmpSelect('app-emp', function(){ if(typeof appRenderAll==='function') appRenderAll(); });
