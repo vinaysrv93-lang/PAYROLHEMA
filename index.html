@@ -98,6 +98,39 @@ var sheetEmpData = [{"name": "AARTI SHARMA", "joining": "02-07-2022"}, {"name": 
 </script>
 <script>
 /* ---- Shared: populate any employee <select> with sheetEmpData + salary arrays ---- */
+
+// Get Net Salary for an employee from the main Salary Statement table
+function getNetSalaryForEmployee(name) {
+  var tb = document.getElementById('tbl');
+  if (!tb) return 0;
+
+  var rows = tb.querySelectorAll('tbody tr');
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+
+    if (r.classList.contains('hidden-row') || r.classList.contains('post-sep')) continue;
+
+    var nameCell = r.querySelector('.name-col');
+    if (!nameCell) continue;
+
+    var nameInput = nameCell.querySelector('input');
+    var rowName = nameInput ? nameInput.value : (nameCell.textContent || '').trim();
+    if (!rowName) continue;
+
+    if (rowName.trim().toUpperCase() === name.trim().toUpperCase()) {
+      var netCell = r.querySelector('.anet');
+      if (!netCell) return 0;
+
+      var netInput = netCell.querySelector('input');
+      var raw = netInput ? netInput.value : (netCell.textContent || '').trim();
+      var val = parseFloat(String(raw).replace(/[^\d.]/g, ''));
+      return isNaN(val) ? 0 : val;
+    }
+  }
+
+  return 0;
+}
+
 function populateEmpSelect(selId, onComplete){
   var sel = document.getElementById(selId);
   if(!sel) return;
@@ -2061,6 +2094,17 @@ window.feeFillPost = function(){
         style="pointer-events:none;user-select:none;cursor:default;width:100%;padding:8px;border:2px solid #43a047;border-radius:4px;font-size:13px;background:#e8f5e9;color:#2e7d32;font-weight:bold;">
     </div>
     <div>
+      <label style="display:block;font-size:11px;color:#2e7d32;font-weight:bold;margin-bottom:3px;">&#128176; Net Salary (from Salary Statement)</label>
+      <input type="text" id="app-net-salary" readonly placeholder="Select employee first..."
+        style="pointer-events:none;user-select:none;cursor:default;width:100%;padding:8px;border:2px solid #43a047;border-radius:4px;font-size:13px;background:#e8f5e9;color:#1b5e20;font-weight:bold;">
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;color:#1565c0;font-weight:bold;margin-bottom:3px;">&#9989; Eligibility Amount (Net &#215; 3) &mdash; Max Sanctionable</label>
+      <input type="text" id="app-eligibility" readonly placeholder="Auto-calculated..."
+        style="pointer-events:none;user-select:none;cursor:default;width:100%;padding:8px;border:2px solid #1565c0;border-radius:4px;font-size:14px;background:#e3f2fd;color:#1565c0;font-weight:bold;">
+    </div>
+
+    <div>
       <label style="display:block;font-size:11px;color:#555;font-weight:bold;margin-bottom:3px;">Advance Amount Required (&#8377;) <span style="color:#b71c1c;">*</span></label>
       <input type="number" id="app-amount" min="0" placeholder="e.g. 25000" oninput="appAutoCalc()"
         style="width:100%;padding:8px;border:2px solid #00695c;border-radius:4px;font-size:12px;background:#e0f2f1;font-weight:bold;">
@@ -2351,6 +2395,23 @@ window.feeFillPost = function(){
     var doj = (selOpt && selOpt.getAttribute('data-joining')) ? selOpt.getAttribute('data-joining') : '';
     var dojEl = document.getElementById('app-doj');
     if(dojEl){
+  // Net Salary & Eligibility (Net × 3)
+  var net = getNetSalaryForEmployee(nm);
+  var netEl = document.getElementById('app-net-salary');
+  var eliEl = document.getElementById('app-eligibility');
+
+  if (netEl) {
+    netEl.value = net > 0
+      ? '₹ ' + net.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+      : 'Not found in Salary Statement';
+  }
+  if (eliEl) {
+    var elig = net * 3;
+    eliEl.value = net > 0
+      ? '₹ ' + elig.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+      : '-';
+  }
+
       dojEl.value = doj;
       dojEl.style.background = doj ? '#e8f5e9' : '#fff9c4';
       dojEl.style.border     = doj ? '2px solid #43a047' : '2px solid #ffa000';
@@ -2360,9 +2421,23 @@ window.feeFillPost = function(){
   };
 
   window.appAutoCalc = function(){
-    var amt = parseFloat(document.getElementById('app-amount').value)||0;
-    var cnt = parseInt(document.getElementById('app-count').value)||0;
-    var sv  = document.getElementById('app-start') ? document.getElementById('app-start').value : '';
+  var amtEl = document.getElementById('app-amount');
+  var amt = parseFloat(amtEl && amtEl.value) || 0;
+
+  var eliEl = document.getElementById('app-eligibility');
+  var max = 0;
+  if (eliEl && eliEl.value) {
+    var raw = eliEl.value.replace(/[^\d.]/g, '');
+    max = parseFloat(raw) || 0;
+  }
+  if (max > 0 && amt > max) {
+    amt = max;
+    amtEl.value = max;
+  }
+
+  var cnt = parseInt(document.getElementById('app-count').value) || 0;
+  var sv  = document.getElementById('app-start') ? document.getElementById('app-start').value : '';
+var sv  = document.getElementById('app-start') ? document.getElementById('app-start').value : '';
     var emiEl = document.getElementById('app-emi');
     var endEl = document.getElementById('app-end');
     if(emiEl){
@@ -2885,6 +2960,23 @@ window.feeFillPost = function(){
     var doj = (selOpt && selOpt.getAttribute('data-joining')) ? selOpt.getAttribute('data-joining') : '';
     var dojEl = document.getElementById('fee-doj');
     if(dojEl){
+  // Net Salary & Eligibility (Net × 3)
+  var net = getNetSalaryForEmployee(nm);
+  var netEl = document.getElementById('app-net-salary');
+  var eliEl = document.getElementById('app-eligibility');
+
+  if (netEl) {
+    netEl.value = net > 0
+      ? '₹ ' + net.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+      : 'Not found in Salary Statement';
+  }
+  if (eliEl) {
+    var elig = net * 3;
+    eliEl.value = net > 0
+      ? '₹ ' + elig.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+      : '-';
+  }
+
       dojEl.removeAttribute('readonly');
       dojEl.value = doj;
       setTimeout(function(){ dojEl.setAttribute('readonly',''); }, 10);
@@ -3115,6 +3207,23 @@ window.feeFillPost = function(){
     var doj = (selOpt && selOpt.getAttribute('data-joining')) ? selOpt.getAttribute('data-joining') : '';
     var dojEl = document.getElementById('adv-doj');
     if(dojEl){
+  // Net Salary & Eligibility (Net × 3)
+  var net = getNetSalaryForEmployee(nm);
+  var netEl = document.getElementById('app-net-salary');
+  var eliEl = document.getElementById('app-eligibility');
+
+  if (netEl) {
+    netEl.value = net > 0
+      ? '₹ ' + net.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+      : 'Not found in Salary Statement';
+  }
+  if (eliEl) {
+    var elig = net * 3;
+    eliEl.value = net > 0
+      ? '₹ ' + elig.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+      : '-';
+  }
+
       dojEl.removeAttribute('readonly');
       dojEl.value = doj;
       setTimeout(function(){ dojEl.setAttribute('readonly',''); }, 10);
